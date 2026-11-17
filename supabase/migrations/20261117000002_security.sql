@@ -5,6 +5,13 @@
 --   * Anonymous users see nothing.
 -- =============================================================================
 
+-- Signed-in users get table privileges explicitly (does not depend on the project's
+-- "automatically expose new tables" setting). What each row allows is decided by RLS below.
+grant usage on schema public to authenticated, service_role;
+grant select, insert, update, delete on all tables in schema public to authenticated;
+grant all on all tables in schema public to service_role;
+grant usage, select on all sequences in schema public to authenticated, service_role;
+
 -- Anonymous visitors never read or write application tables.
 revoke all on all tables in schema public from anon;
 alter default privileges in schema public revoke all on tables from anon;
