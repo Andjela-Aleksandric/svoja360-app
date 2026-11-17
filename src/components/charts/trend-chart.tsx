@@ -8,7 +8,8 @@ export interface TrendPoint { date: string; value: number | null }
  * Single-series trend. One hue (accent), 2px line, ≥8px markers, recessive grid,
  * crosshair tooltip. The card title names the series, so there is no legend.
  */
-export function TrendChart({ data, unit, height = 220, digits = 1, kind = "line", ariaLabel }: { data: TrendPoint[]; unit?: string; height?: number; digits?: number; kind?: "line" | "bar"; ariaLabel: string }) {
+export function TrendChart({ data, unit, height = 220, digits = 1, kind = "line", ariaLabel, format, invert }: { data: TrendPoint[]; unit?: string; height?: number; digits?: number; kind?: "line" | "bar"; ariaLabel: string; format?: (v: number) => string; invert?: boolean }) {
+  const fmt = format ?? ((v: number) => formatNumber(v, digits));
   const values = data.map((d) => d.value).filter((v): v is number => v != null);
   if (values.length === 0) return null;
   const min = Math.min(...values);
@@ -25,7 +26,7 @@ export function TrendChart({ data, unit, height = 220, digits = 1, kind = "line"
         return (
           <div className="rounded-[12px] border border-line bg-surface px-3 py-2 text-[13px] shadow-[var(--shadow-pop)]">
             <div className="text-muted">{formatDateShort(p.date)}</div>
-            <div className="font-bold tabular text-ink">{p.value == null ? "–" : `${formatNumber(p.value, digits)}${unit ? ` ${unit}` : ""}`}</div>
+            <div className="font-bold tabular text-ink">{p.value == null ? "–" : `${fmt(p.value)}${unit ? ` ${unit}` : ""}`}</div>
           </div>
         );
       }}
@@ -47,7 +48,7 @@ export function TrendChart({ data, unit, height = 220, digits = 1, kind = "line"
           <LineChart {...common}>
             <CartesianGrid vertical={false} stroke="var(--color-line)" strokeDasharray="2 4" />
             <XAxis dataKey="date" tickFormatter={formatDateShort} tick={tick} axisLine={false} tickLine={false} minTickGap={24} />
-            <YAxis domain={domain} tick={tick} axisLine={false} tickLine={false} width={44} tickFormatter={(v) => formatNumber(v, 1)} />
+            <YAxis domain={domain} reversed={invert} tick={tick} axisLine={false} tickLine={false} width={44} tickFormatter={(v) => (format ? format(v) : formatNumber(v, 1))} />
             {tooltip}
             <Line type="monotone" dataKey="value" stroke="var(--color-accent)" strokeWidth={2} connectNulls
               dot={data.length <= 24 ? { r: 4, fill: "var(--color-accent)", stroke: "var(--color-surface)", strokeWidth: 2 } : false}
