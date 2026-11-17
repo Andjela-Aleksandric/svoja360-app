@@ -481,7 +481,7 @@ create table public.training_weeks (
   week_number smallint not null check (week_number between 1 and 52),
   is_deload   boolean not null default false,
   notes       text,
-  unique (program_id, week_number)
+  unique (program_id, week_number) deferrable initially deferred
 );
 
 create table public.training_days (
@@ -625,7 +625,7 @@ create table public.running_weeks (
   week_number smallint not null check (week_number between 1 and 52),
   target_km   numeric(5,1) check (target_km is null or target_km between 0 and 300),
   notes       text,
-  unique (program_id, week_number)
+  unique (program_id, week_number) deferrable initially deferred
 );
 
 create table public.running_workouts (

@@ -4,6 +4,7 @@ import { t } from "@/lib/i18n/sr";
 export const profileTabs = [
   { key: "overview", label: t.profile.tabs.overview },
   { key: "initial", label: t.profile.tabs.initial },
+  { key: "strength", label: t.profile.tabs.strength },
   { key: "checkins", label: t.profile.tabs.checkins },
   { key: "measurements", label: t.profile.tabs.measurements },
   { key: "files", label: t.profile.tabs.files },

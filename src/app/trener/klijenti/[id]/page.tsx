@@ -18,6 +18,7 @@ import { NotesPanel } from "./notes-panel";
 import { OverviewTab } from "./overview-tab";
 import { profileTabs, type ProfileTab } from "./tabs";
 import { CheckinsTab, FilesTab, InitialTab } from "./questionnaire-tabs";
+import { StrengthTab } from "./strength-tab";
 
 export default async function ClientProfilePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string; v?: string }> }) {
   await requireCoach();
@@ -70,6 +71,7 @@ export default async function ClientProfilePage({ params, searchParams }: { para
       {tab === "overview" && <OverviewTab client={client} pinned={notes.filter((n) => n.is_pinned)} />}
       {tab === "initial" && <InitialTab clientId={id} version={v} />}
       {tab === "checkins" && <CheckinsTab clientId={id} />}
+      {tab === "strength" && <StrengthTab clientId={id} />}
       {tab === "files" && <FilesTab clientId={id} />}
       {tab === "measurements" && <MeasurementsPanel clientId={id} rows={await getMeasurements(id)} />}
       {tab === "notes" && <NotesPanel clientId={id} notes={notes} authors={authors} />}
