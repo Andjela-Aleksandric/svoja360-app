@@ -17,3 +17,14 @@ end $$;
 
 revoke all on function public.log_coach_event(text, uuid, text) from public, anon;
 grant execute on function public.log_coach_event(text, uuid, text) to authenticated;
+
+-- Coach names and WhatsApp numbers for the client's "contact" section.
+-- Clients cannot read coach profiles directly; this exposes only name and phone.
+create or replace function public.coach_contacts()
+returns table (full_name text, phone text) language sql stable security definer set search_path = '' as $$
+  select p.full_name, p.phone from public.profiles p
+  where p.role = 'coach' and auth.uid() is not null
+  order by p.full_name;
+$$;
+revoke all on function public.coach_contacts() from public, anon;
+grant execute on function public.coach_contacts() to authenticated;

@@ -229,9 +229,20 @@ create policy client_files_client_select on storage.objects for select to authen
   using (bucket_id = 'client-files'
          and (storage.foldername(name))[1] = public.current_client_id()::text);
 
+-- A client may only upload to a path that was registered first in client_files.
+-- That insert is where consent is checked, so storage cannot be used to bypass it.
+create or replace function public.client_file_registered(p_path text)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (
+    select 1 from public.client_files f
+    where f.storage_path = p_path and f.client_id = public.current_client_id()
+  );
+$$;
+
 create policy client_files_client_insert on storage.objects for insert to authenticated
   with check (bucket_id = 'client-files'
-              and (storage.foldername(name))[1] = public.current_client_id()::text);
+              and (storage.foldername(name))[1] = public.current_client_id()::text
+              and public.client_file_registered(name));
 
 create policy client_files_client_delete on storage.objects for delete to authenticated
   using (bucket_id = 'client-files'

@@ -9,7 +9,7 @@ export interface Viewer {
   role: "coach" | "client";
   fullName: string | null;
   phone: string | null;
-  client: { id: string; full_name: string; status: string; start_date: string; phone_e164: string | null } | null;
+  client: { id: string; full_name: string; status: string; start_date: string; phone_e164: string | null; birth_date: string | null } | null;
 }
 
 /** The signed-in user with role and (for clients) their client record. Cached per request. */
@@ -21,7 +21,7 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
   if (!profile) return null;
   let client: Viewer["client"] = null;
   if (profile.role === "client") {
-    const { data } = await supabase.from("clients").select("id, full_name, status, start_date, phone_e164").eq("user_id", user.id).maybeSingle();
+    const { data } = await supabase.from("clients").select("id, full_name, status, start_date, phone_e164, birth_date").eq("user_id", user.id).maybeSingle();
     client = data ?? null;
   }
   return {

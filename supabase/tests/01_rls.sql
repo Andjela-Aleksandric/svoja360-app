@@ -192,6 +192,11 @@ begin
     raise exception 'storage upload into other client folder must fail';
   exception when insufficient_privilege then null;
   end;
+  begin
+    insert into storage.objects (bucket_id, name) values ('client-files', 'aaaaaaaa-0000-0000-0000-00000000000a/lab_result/unregistered.pdf');
+    raise exception 'storage upload without a registered file row must fail';
+  exception when insufficient_privilege then null;
+  end;
   select count(*) into n from storage.objects; assert n = 1, 'client sees only own stored files';
 
   -- Measurements

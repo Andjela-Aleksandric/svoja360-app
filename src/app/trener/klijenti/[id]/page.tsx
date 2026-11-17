@@ -17,11 +17,12 @@ import { ClientActions } from "./client-actions";
 import { NotesPanel } from "./notes-panel";
 import { OverviewTab } from "./overview-tab";
 import { profileTabs, type ProfileTab } from "./tabs";
+import { CheckinsTab, FilesTab, InitialTab } from "./questionnaire-tabs";
 
-export default async function ClientProfilePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string }> }) {
+export default async function ClientProfilePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string; v?: string }> }) {
   await requireCoach();
   const { id } = await params;
-  const { tab: rawTab } = await searchParams;
+  const { tab: rawTab, v } = await searchParams;
   const client = await getClient(id);
   if (!client) notFound();
   const tab: ProfileTab = profileTabs.some((x) => x.key === rawTab) ? (rawTab as ProfileTab) : "overview";
@@ -67,6 +68,9 @@ export default async function ClientProfilePage({ params, searchParams }: { para
       <div className="mb-6"><LinkTabs layoutId="profile-tabs" active={tab} items={profileTabs.map((x) => ({ key: x.key, label: x.label, href: `/trener/klijenti/${id}?tab=${x.key}` }))} /></div>
 
       {tab === "overview" && <OverviewTab client={client} pinned={notes.filter((n) => n.is_pinned)} />}
+      {tab === "initial" && <InitialTab clientId={id} version={v} />}
+      {tab === "checkins" && <CheckinsTab clientId={id} />}
+      {tab === "files" && <FilesTab clientId={id} />}
       {tab === "measurements" && <MeasurementsPanel clientId={id} rows={await getMeasurements(id)} />}
       {tab === "notes" && <NotesPanel clientId={id} notes={notes} authors={authors} />}
     </>
