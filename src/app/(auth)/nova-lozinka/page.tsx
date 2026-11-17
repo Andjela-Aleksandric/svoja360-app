@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n/sr";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,18 @@ export default function NewPasswordPage() {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Links from Supabase's default email templates (invite, password reset sent by a coach)
+  // arrive with the session in the URL fragment: #access_token=...&refresh_token=...
+  useEffect(() => {
+    const hash = new URLSearchParams(window.location.hash.slice(1));
+    if (hash.get("error") || hash.get("error_code")) { setError(t.auth.linkExpired); history.replaceState(null, "", window.location.pathname); return; }
+    const access_token = hash.get("access_token");
+    const refresh_token = hash.get("refresh_token");
+    if (!access_token || !refresh_token) return;
+    history.replaceState(null, "", window.location.pathname);
+    createClient().auth.setSession({ access_token, refresh_token }).then((res: { error: unknown }) => { if (res.error) setError(t.auth.linkExpired); });
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();

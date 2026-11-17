@@ -29,7 +29,9 @@ Ukupno oko 30 minuta. Sve je na besplatnim planovima. Ključeve unosite samo u S
 2. **Authentication → URL Configuration**:
    - Site URL: adresa aplikacije, npr. `https://svoja360.vercel.app`
    - Redirect URLs: dodajte `https://svoja360.vercel.app/**` (i `http://localhost:3000/**` za razvoj)
-3. **Authentication → Emails → Templates**. Promenite dva šablona:
+3. **Šabloni mejlova na srpskom (opciono).** Aplikacija radi i sa podrazumevanim engleskim šablonima Supabase-a.
+   Supabase dozvoljava izmenu šablona tek kad se poveže sopstveni SMTP (korak 4). Posle toga, u
+   **Authentication → Emails → Templates** promenite dva šablona:
 
    **Invite user** – naslov: `Pozivnica za SVOJA 360`
 
