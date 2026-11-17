@@ -759,6 +759,22 @@ export const t = {
     noMeals: "Ovaj dan još nema obroke.",
     todayPlan: "Današnji plan ishrane",
     macroSplit: "Raspodela makroa",
+    trainingDay: "Dan sa treningom",
+    restDay: "Dan bez treninga",
+    removeDay: "Ukloni dan",
+    removeMeal: "Ukloni obrok",
+    templateSaved: "Šablon obroka je sačuvan.",
+    noTemplates: "Još nema šablona obroka.",
+    macrosFromTargets: (kcal: number) => `Makroi daju ${kcal} kcal.`,
+    perServing: "Količina",
+    orAlternative: "ili",
+    search: "Pretraži namirnice",
+    kcalShort: "kcal",
+    proteinShort: "P",
+    carbsShort: "UH",
+    fatShort: "M",
+    chooseDay: "Izaberi dan",
+    notesForClient: "Napomene za klijenta",
   },
 
   foods: {
@@ -774,6 +790,7 @@ export const t = {
     source: "Izvor",
     custom: "Prilagođena",
     created: "Namirnica je dodata.",
+    macrosTooHigh: "Zbir proteina, ugljenih hidrata i masti ne može biti veći od 100 g.",
   },
 
   progress: {
@@ -794,6 +811,7 @@ export const t = {
     range: { "4w": "4 nedelje", "12w": "3 meseca", "26w": "6 meseci", all: "Sve" } as Record<string, string>,
     view: { daily: "Dnevno", weekly: "Nedeljno", monthly: "Mesečno" } as Record<string, string>,
     comparePrev: "u odnosu na prethodni period",
+    compare: "Uporedi fotografije",
     measurementAdded: "Mere su sačuvane.",
     changeSinceStart: "Od početka",
     noData: "Kad se pojave prvi podaci, grafik se popunjava sam.",

@@ -20,6 +20,8 @@ import { profileTabs, type ProfileTab } from "./tabs";
 import { CheckinsTab, FilesTab, InitialTab } from "./questionnaire-tabs";
 import { StrengthTab } from "./strength-tab";
 import { RunningTab } from "./running-tab";
+import { NutritionTab } from "./nutrition-tab";
+import { ProgressTab } from "./progress-tab";
 
 export default async function ClientProfilePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string; v?: string }> }) {
   await requireCoach();
@@ -74,6 +76,8 @@ export default async function ClientProfilePage({ params, searchParams }: { para
       {tab === "checkins" && <CheckinsTab clientId={id} />}
       {tab === "strength" && <StrengthTab clientId={id} />}
       {tab === "running" && <RunningTab clientId={id} />}
+      {tab === "nutrition" && <NutritionTab clientId={id} />}
+      {tab === "progress" && <ProgressTab clientId={id} />}
       {tab === "files" && <FilesTab clientId={id} />}
       {tab === "measurements" && <MeasurementsPanel clientId={id} rows={await getMeasurements(id)} />}
       {tab === "notes" && <NotesPanel clientId={id} notes={notes} authors={authors} />}
