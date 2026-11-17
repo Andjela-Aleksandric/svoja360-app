@@ -10,6 +10,8 @@ import { StatCard } from "@/components/ui/page-header";
 import { TrendChart } from "@/components/charts/trend-chart";
 import { CheckinTrends } from "@/components/checkins/checkin-trends";
 
+const signed = (n: number) => `${n > 0 ? "+" : ""}${formatNumber(n)}`;
+
 /** One page with every number: body, strength, running and check-in trends. */
 export async function ProgressTab({ clientId }: { clientId: string }) {
   const [measurements, { analytics }, activities, series] = await Promise.all([getMeasurements(clientId), getStrengthAnalytics(clientId), listActivities(clientId), getCheckinSeries(clientId, 12)]);
@@ -20,8 +22,8 @@ export async function ProgressTab({ clientId }: { clientId: string }) {
   return (
     <div className="grid gap-4">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label={t.progress.weight} value={weights.length ? `${formatNumber(weights.at(-1)!.value)} kg` : "–"} hint={weights.length > 1 ? `${t.progress.changeSinceStart}: ${formatNumber((weights.at(-1)!.value as number) - (weights[0].value as number))} kg` : undefined} />
-        <StatCard label={t.strengthAnalytics.totalVolume} value={`${formatNumber(analytics.totalVolume / 1000, 1)} t`} hint={`${analytics.sessions} ${t.workout.history.toLowerCase()}`} />
+        <StatCard label={t.progress.weight} value={weights.length ? `${formatNumber(weights.at(-1)!.value)} kg` : "–"} hint={weights.length > 1 ? `${t.progress.changeSinceStart}: ${signed((weights.at(-1)!.value as number) - (weights[0].value as number))} kg` : undefined} />
+        <StatCard label={t.strengthAnalytics.totalVolume} value={`${formatNumber(analytics.totalVolume / 1000, 1)} t`} hint={t.workout.sessionsCount(analytics.sessions)} />
         <StatCard label={t.running.totalDistance} value={`${formatNumber(run.totalKm, 1)} km`} />
         <StatCard label={t.progress.trainingAdherence} value={adherence.length ? `${adherence.at(-1)!.value}%` : "–"} />
       </div>

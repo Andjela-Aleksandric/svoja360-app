@@ -628,6 +628,7 @@ export const t = {
     sets: "Serija",
     pr: "Lični rekord",
     noProgram: "Još nemate aktivan program snage. Vaš trener ga priprema.",
+    sessionsCount: (n: number) => (n % 10 === 1 && n % 100 !== 11 ? `${n} trening` : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? `${n} treninga` : `${n} treninga`),
   },
 
   strengthAnalytics: {
