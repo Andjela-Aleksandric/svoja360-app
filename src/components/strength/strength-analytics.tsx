@@ -15,7 +15,7 @@ export function StrengthAnalyticsView({ data, names }: { data: StrengthAnalytics
   if (!data.sessions) return <p className="text-sm text-muted">{t.workout.noHistory}</p>;
   return (
     <div className="grid gap-4">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="stagger grid grid-cols-2 gap-3 sm:grid-cols-3">
         <StatCard label={t.strengthAnalytics.totalVolume} value={`${formatNumber(data.totalVolume / 1000, 1)} t`} />
         <StatCard label={t.workout.history} value={data.sessions} />
         <StatCard label={t.strengthAnalytics.prs} value={data.prs.length} className="col-span-2 sm:col-span-1" />

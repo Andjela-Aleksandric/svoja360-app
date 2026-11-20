@@ -35,24 +35,24 @@ export async function ClientToday({ clientId }: { clientId: string }) {
   return (
     <Card>
       <CardHeader title={t.clientHome.todayTraining} />
-      <CardBody className="grid gap-2.5">
+      <CardBody className="stagger grid gap-2.5">
         {prog && (todayDay ? (
-          <Link href={`/klijent/treninzi/${todayDay.id}`} className="group flex items-center gap-3 rounded-[16px] border border-line p-3.5 hover:border-ink">
-            <span className="grid size-10 place-items-center rounded-full bg-accent-soft text-accent">{doneDays.has(todayDay.id) ? <Check className="size-5" /> : <Dumbbell className="size-5" />}</span>
+          <Link href={`/klijent/treninzi/${todayDay.id}`} className="group lift flex items-center gap-3 rounded-[16px] border border-line p-3.5 hover:border-ink">
+            <span className="grid size-10 place-items-center rounded-full transition-transform duration-300 group-hover:rotate-[-8deg] group-hover:scale-110 bg-accent-soft text-accent">{doneDays.has(todayDay.id) ? <Check className="size-5" /> : <Dumbbell className="size-5" />}</span>
             <div className="min-w-0 flex-1"><div className="font-bold">{todayDay.name}</div><div className="text-xs text-muted">{t.strength.exercisesCount(todayDay.exercises.length)}</div></div>
             <ChevronRight className="size-4 text-faint group-hover:translate-x-0.5" />
           </Link>
         ) : <p className="flex items-center gap-2 text-sm text-muted"><Dumbbell className="size-4" />{t.clientHome.restDay}</p>)}
         {nextRun && (
-          <Link href="/klijent/trcanje" className="group flex items-center gap-3 rounded-[16px] border border-line p-3.5 hover:border-ink">
-            <span className="grid size-10 place-items-center rounded-full bg-info-soft text-info"><Footprints className="size-5" /></span>
+          <Link href="/klijent/trcanje" className="group lift flex items-center gap-3 rounded-[16px] border border-line p-3.5 hover:border-ink">
+            <span className="grid size-10 place-items-center rounded-full transition-transform duration-300 group-hover:rotate-[-8deg] group-hover:scale-110 bg-info-soft text-info"><Footprints className="size-5" /></span>
             <div className="min-w-0 flex-1"><div className="font-bold">{nextRun.title}</div><div className="text-xs text-muted">{t.clientHome.upcomingRun}{nextRun.day_of_week ? ` · ${t.weekdays[nextRun.day_of_week - 1]}` : ""} · ~{formatNumber(estimateWorkoutDistanceM(nextRun.segments) / 1000, 1)} km</div></div>
             <ChevronRight className="size-4 text-faint group-hover:translate-x-0.5" />
           </Link>
         )}
         {plan && (
-          <Link href="/klijent/ishrana" className="group flex items-center gap-3 rounded-[16px] border border-line p-3.5 hover:border-ink">
-            <span className="grid size-10 place-items-center rounded-full bg-success-soft text-success"><Apple className="size-5" /></span>
+          <Link href="/klijent/ishrana" className="group lift flex items-center gap-3 rounded-[16px] border border-line p-3.5 hover:border-ink">
+            <span className="grid size-10 place-items-center rounded-full transition-transform duration-300 group-hover:rotate-[-8deg] group-hover:scale-110 bg-success-soft text-success"><Apple className="size-5" /></span>
             <div className="min-w-0 flex-1"><div className="font-bold">{t.clientHome.todayNutrition}</div><div className="text-xs text-muted">{plan.kcal_target ? `${plan.kcal_target} kcal · ` : ""}{plan.protein_g ? `${t.nutrition.protein} ${plan.protein_g} g` : plan.name}</div></div>
             <ChevronRight className="size-4 text-faint group-hover:translate-x-0.5" />
           </Link>

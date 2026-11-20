@@ -10,7 +10,6 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { WhatsAppButton } from "@/components/clients/wa-button";
-import { PageTransition } from "@/components/shell/page-transition";
 
 export const metadata = { title: t.nav.coach.dashboard };
 
@@ -28,10 +27,10 @@ export default async function CoachDashboard() {
   ];
 
   return (
-    <PageTransition>
+    <>
       <PageHeader eyebrow={formatDate(new Date())} title={`${greeting()}, ${firstName(viewer.fullName ?? "")}`.replace(/, $/, "")} />
 
-      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="stagger mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label={t.dashboard.activeClients} value={stats.active} />
         <StatCard label={t.dashboard.newClients} value={stats.newThisMonth} />
         <Link href="/trener/izvestaji" className="rounded-[20px] transition-transform hover:-translate-y-0.5">
@@ -47,9 +46,9 @@ export default async function CoachDashboard() {
             {attention.length === 0 ? (
               <EmptyState icon={<Sparkles />} title={t.dashboard.needsAttentionEmpty} className="border-0 py-8" />
             ) : (
-              <ul className="-mx-2 grid">
+              <ul className="stagger -mx-2 grid">
                 {attention.slice(0, 10).map((a) => (
-                  <li key={a.client.id} className="flex items-center gap-3 rounded-[14px] px-2 py-2.5 hover:bg-hover">
+                  <li key={a.client.id} className="group flex items-center gap-3 rounded-[14px] px-2 py-2.5 transition-colors hover:bg-hover">
                     <Link href={`/trener/klijenti/${a.client.id}`} className="flex min-w-0 flex-1 items-center gap-3">
                       <Avatar name={a.client.full_name} size={38} />
                       <div className="min-w-0">
@@ -72,9 +71,9 @@ export default async function CoachDashboard() {
         <div className="grid content-start gap-4">
           <Card>
             <CardHeader title={t.dashboard.quickActions} />
-            <CardBody className="grid gap-1.5">
+            <CardBody className="stagger grid gap-1.5">
               {quick.map((q) => (
-                <Link key={q.href} href={q.href} className="group flex h-12 items-center gap-3 rounded-[14px] border border-line px-3.5 text-sm font-semibold transition-colors hover:border-ink">
+                <Link key={q.href} href={q.href} className="group flex h-12 items-center gap-3 rounded-[14px] border border-line px-3.5 text-sm font-semibold transition-all duration-200 hover:border-ink hover:bg-hover hover:pl-4">
                   <q.icon className="size-[18px] text-muted group-hover:text-accent" />
                   <span className="flex-1">{q.label}</span>
                   <ArrowUpRight className="size-4 text-faint transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-ink" />
@@ -89,7 +88,7 @@ export default async function CoachDashboard() {
               {activity.length === 0 ? (
                 <EmptyState icon={<Activity />} title={t.dashboard.recentActivityEmpty} className="border-0 py-6" />
               ) : (
-                <ol className="relative grid gap-3.5 before:absolute before:bottom-2 before:left-[5px] before:top-2 before:w-px before:bg-line">
+                <ol className="stagger relative grid gap-3.5 before:absolute before:bottom-2 before:left-[5px] before:top-2 before:w-px before:bg-line">
                   {activity.map((a) => (
                     <li key={a.id} className="relative pl-6">
                       <span className="absolute left-0 top-1.5 size-[11px] rounded-full border-2 border-surface bg-accent" aria-hidden />
@@ -105,6 +104,6 @@ export default async function CoachDashboard() {
           </Card>
         </div>
       </div>
-    </PageTransition>
+    </>
   );
 }

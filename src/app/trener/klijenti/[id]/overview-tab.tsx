@@ -35,8 +35,8 @@ export async function OverviewTab({ client, pinned }: { client: ClientRow; pinne
   ];
 
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
-      <div className="grid gap-4 sm:grid-cols-3 lg:col-span-3">
+    <div className="stagger grid gap-4 lg:grid-cols-3">
+      <div className="stagger grid gap-4 sm:grid-cols-3 lg:col-span-3">
         <StatCard label={t.profile.overview.currentWeight} value={current != null ? `${formatNumber(current)} kg` : "–"} hint={weights.at(-1) ? formatDate(weights.at(-1)!.date) : t.common.noData} />
         <StatCard label={t.profile.overview.weightChange} value={change != null ? `${change > 0 ? "+" : ""}${formatNumber(change)} kg` : "–"} hint={weights[0] ? `${t.common.from} ${formatDate(weights[0].date)}` : undefined} />
         <StatCard label={t.profile.overview.since} value={formatDate(client.start_date)} />

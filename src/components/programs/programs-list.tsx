@@ -17,10 +17,10 @@ export function ProgramsList({ items, basePath, showWeeks = true }: { items: Pro
   const Section = ({ title, list }: { title: string; list: ProgramListItem[] }) => list.length ? (
     <section className="mb-6">
       <h2 className="mb-2.5 text-[15px] font-bold">{title} <span className="font-normal text-muted">· {list.length}</span></h2>
-      <ul className="overflow-hidden rounded-[20px] border border-line bg-surface">
+      <ul className="stagger overflow-hidden rounded-[20px] border border-line bg-surface">
         {list.map((p) => (
           <li key={p.id} className="border-b border-line/70 last:border-0">
-            <Link href={`${basePath}/${p.id}`} className="flex items-center gap-3 px-4 py-3.5 hover:bg-hover sm:px-5">
+            <Link href={`${basePath}/${p.id}`} className="group flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-hover sm:px-5">
               {p.client_name ? <Avatar name={p.client_name} size={36} /> : <span className="grid size-9 place-items-center rounded-full bg-subtle text-muted"><LayoutTemplate className="size-4" /></span>}
               <div className="min-w-0 flex-1">
                 <div className="truncate font-semibold">{p.name}</div>

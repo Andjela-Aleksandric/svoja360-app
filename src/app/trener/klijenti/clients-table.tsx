@@ -106,7 +106,7 @@ export function ClientsTable({ clients, periodStart }: { clients: ClientListItem
               {rows.map((c, i) => (
                 <motion.tr key={c.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: Math.min(i * 0.02, 0.3) }} className="group border-b border-line/70 last:border-0 hover:bg-hover">
                   <td className="px-5 py-3">
-                    <Link href={`/trener/klijenti/${c.id}`} className="flex items-center gap-3">
+                    <Link href={`/trener/klijenti/${c.id}`} className="group flex items-center gap-3">
                       <Avatar name={c.full_name} size={36} />
                       <span className="min-w-0">
                         <span className="block truncate font-semibold text-ink">{c.full_name}</span>
@@ -134,9 +134,9 @@ export function ClientsTable({ clients, periodStart }: { clients: ClientListItem
           </table>
 
           {/* Mobile cards */}
-          <ul className="divide-y divide-line lg:hidden">
+          <ul className="stagger divide-y divide-line lg:hidden">
             {rows.map((c) => (
-              <li key={c.id} className="flex items-center gap-3 px-4 py-3.5">
+              <li key={c.id} className="flex items-center gap-3 px-4 py-3.5 transition-colors active:bg-hover">
                 <Link href={`/trener/klijenti/${c.id}`} className="flex min-w-0 flex-1 items-center gap-3">
                   <Avatar name={c.full_name} size={42} />
                   <div className="min-w-0 flex-1">

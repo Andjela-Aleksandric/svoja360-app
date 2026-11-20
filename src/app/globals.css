@@ -136,3 +136,101 @@
   from { opacity: 1; }
   to { opacity: 0; transform: scale(0.97); }
 }
+
+/* ---------------------------------------------------------------------------
+   Motion layer. Short, soft and purposeful: elements rise in once, react to
+   hover and press, and never move on their own after that. Everything below
+   is switched off by the prefers-reduced-motion rule above.
+   --------------------------------------------------------------------------- */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes sheen {
+  from { transform: translateX(-120%) skewX(-18deg); }
+  to { transform: translateX(220%) skewX(-18deg); }
+}
+
+@utility animate-rise {
+  animation: rise 0.45s var(--ease-out-soft) both;
+}
+@utility animate-pop {
+  animation: pop 0.32s var(--ease-out-soft);
+}
+@utility animate-float {
+  animation: float 3.2s ease-in-out infinite;
+}
+
+/* Children of .stagger rise one after another (first 12, the rest together). */
+.stagger > * { animation: rise 0.45s var(--ease-out-soft) both; }
+.stagger > :nth-child(2) { animation-delay: 40ms; }
+.stagger > :nth-child(3) { animation-delay: 80ms; }
+.stagger > :nth-child(4) { animation-delay: 120ms; }
+.stagger > :nth-child(5) { animation-delay: 160ms; }
+.stagger > :nth-child(6) { animation-delay: 200ms; }
+.stagger > :nth-child(7) { animation-delay: 240ms; }
+.stagger > :nth-child(8) { animation-delay: 280ms; }
+.stagger > :nth-child(9) { animation-delay: 320ms; }
+.stagger > :nth-child(10) { animation-delay: 360ms; }
+.stagger > :nth-child(11) { animation-delay: 400ms; }
+.stagger > :nth-child(n + 12) { animation-delay: 440ms; }
+
+/* Hover lift for anything clickable that looks like a card. */
+@utility lift {
+  transition: transform 0.22s var(--ease-out-soft), box-shadow 0.22s var(--ease-out-soft), border-color 0.22s ease;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 34px -20px rgba(20, 18, 21, 0.35);
+  }
+  &:active {
+    transform: translateY(0) scale(0.99);
+  }
+}
+
+/* A light sweep across dark call-to-action cards on hover. */
+@utility sheen {
+  position: relative;
+  overflow: hidden;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    width: 40%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+    transform: translateX(-120%) skewX(-18deg);
+    pointer-events: none;
+  }
+  &:hover::after {
+    animation: sheen 0.9s var(--ease-out-soft);
+  }
+}
+
+/* Tables and lists: rows light up and their chevrons nudge forward. */
+@layer base {
+  tbody tr {
+    transition: background-color 0.15s ease;
+  }
+  a .lucide-chevron-right,
+  button .lucide-chevron-right,
+  a .lucide-arrow-right,
+  a .lucide-arrow-up-right {
+    transition: transform 0.2s var(--ease-out-soft);
+  }
+  a:hover .lucide-chevron-right,
+  button:hover .lucide-chevron-right,
+  a:hover .lucide-arrow-right {
+    transform: translateX(3px);
+  }
+  a:hover .lucide-arrow-up-right {
+    transform: translate(2px, -2px);
+  }
+}

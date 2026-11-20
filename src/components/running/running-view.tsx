@@ -22,7 +22,7 @@ import { ActivityForm } from "./activity-form";
 export function WorkoutCard({ w, done }: { w: RWorkout; done: boolean }) {
   const dist = estimateWorkoutDistanceM(w.segments), dur = estimateWorkoutDurationS(w.segments);
   return (
-    <div className={cn("rounded-[18px] border p-4", done ? "border-success/30 bg-success-soft/40" : "border-line bg-surface")}>
+    <div className={cn("lift rounded-[18px] border p-4", done ? "border-success/30 bg-success-soft/40" : "border-line bg-surface")}>
       <div className="mb-2 flex items-start justify-between gap-2">
         <div>
           <div className="font-bold">{w.title}</div>
@@ -66,7 +66,7 @@ export function RunningView({ tree, currentWeek, activities, clientId, canDelete
 
   return (
     <div className="grid gap-4">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="stagger grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label={t.running.thisWeek} value={`${formatNumber(weekKmDone, 1)} km`} hint={plannedKm ? `${t.workout.planned}: ${formatNumber(plannedKm, 1)} km` : undefined} />
         <StatCard label={t.running.totalDistance} value={`${formatNumber(a.totalKm, 1)} km`} />
         <StatCard label={t.running.avgPace} value={a.avgPace ? formatPace(a.avgPace) : "–"} hint={a.avgPace ? "min/km" : undefined} />

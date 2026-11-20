@@ -39,12 +39,12 @@ export default async function ClientWorkoutsPage({ searchParams }: { searchParam
       )}
       {week.is_deload && <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-info"><Moon className="size-4" />{t.strength.deload}</p>}
 
-      <div className="mb-8 grid gap-3 md:grid-cols-2">
+      <div className="stagger mb-8 grid gap-3 md:grid-cols-2">
         {week.days.length === 0 && <EmptyState title={t.strength.noDays} />}
         {week.days.map((d) => {
           const done = doneDays.has(d.id);
           return (
-            <Link key={d.id} href={`/klijent/treninzi/${d.id}`} className={cn("group rounded-[22px] border p-5 transition-all hover:-translate-y-0.5", done ? "border-success/30 bg-success-soft/40" : "border-line bg-surface hover:border-line-strong")}>
+            <Link key={d.id} href={`/klijent/treninzi/${d.id}`} className={cn("group lift rounded-[22px] border p-5", done ? "border-success/30 bg-success-soft/40" : "border-line bg-surface hover:border-line-strong")}>
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div>
                   <div className="text-[17px] font-bold">{d.name}</div>

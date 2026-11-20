@@ -1,5 +1,6 @@
 "use client";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Bar, BarChart } from "recharts";
+import { useReducedMotion } from "motion/react";
 import { formatDateShort, formatNumber } from "@/lib/utils/format";
 
 export interface TrendPoint { date: string; value: number | null }
@@ -10,6 +11,7 @@ export interface TrendPoint { date: string; value: number | null }
  */
 export function TrendChart({ data, unit, height = 220, digits = 1, kind = "line", ariaLabel, format, invert }: { data: TrendPoint[]; unit?: string; height?: number; digits?: number; kind?: "line" | "bar"; ariaLabel: string; format?: (v: number) => string; invert?: boolean }) {
   const fmt = format ?? ((v: number) => formatNumber(v, digits));
+  const reduce = useReducedMotion();
   const values = data.map((d) => d.value).filter((v): v is number => v != null);
   if (values.length === 0) return null;
   const min = Math.min(...values);
@@ -40,9 +42,9 @@ export function TrendChart({ data, unit, height = 220, digits = 1, kind = "line"
           <BarChart {...common}>
             <CartesianGrid vertical={false} stroke="var(--color-line)" strokeDasharray="2 4" />
             <XAxis dataKey="date" tickFormatter={formatDateShort} tick={tick} axisLine={false} tickLine={false} minTickGap={24} />
-            <YAxis domain={domain} tick={tick} axisLine={false} tickLine={false} width={44} tickFormatter={(v) => formatNumber(v, 0)} />
+            <YAxis domain={domain} tick={tick} axisLine={false} tickLine={false} width={52} tickFormatter={(v) => formatNumber(v, 0)} />
             {tooltip}
-            <Bar dataKey="value" fill="var(--color-accent)" radius={[4, 4, 0, 0]} maxBarSize={28} />
+            <Bar dataKey="value" fill="var(--color-accent)" radius={[4, 4, 0, 0]} maxBarSize={28} isAnimationActive={!reduce} animationDuration={700} animationEasing="ease-out" activeBar={{ fill: "var(--color-accent-hover)" }} />
           </BarChart>
         ) : (
           <LineChart {...common}>
@@ -52,7 +54,7 @@ export function TrendChart({ data, unit, height = 220, digits = 1, kind = "line"
             {tooltip}
             <Line type="monotone" dataKey="value" stroke="var(--color-accent)" strokeWidth={2} connectNulls
               dot={data.length <= 24 ? { r: 4, fill: "var(--color-accent)", stroke: "var(--color-surface)", strokeWidth: 2 } : false}
-              activeDot={{ r: 5, fill: "var(--color-accent)", stroke: "var(--color-surface)", strokeWidth: 2 }} isAnimationActive={false} />
+              activeDot={{ r: 6, fill: "var(--color-accent)", stroke: "var(--color-surface)", strokeWidth: 2 }} isAnimationActive={!reduce} animationDuration={900} animationEasing="ease-out" />
           </LineChart>
         )}
       </ResponsiveContainer>

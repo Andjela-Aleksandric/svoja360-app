@@ -10,7 +10,6 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { CheckinBadge } from "@/components/clients/status";
 import { TrendChart } from "@/components/charts/trend-chart";
-import { PageTransition } from "@/components/shell/page-transition";
 import { ClientToday } from "./today";
 
 export const metadata = { title: t.nav.client.home };
@@ -23,14 +22,14 @@ export default async function ClientHome() {
   const weights = [...measurements].reverse().filter((m) => m.weight_kg != null).slice(-12).map((m) => ({ date: m.measured_on, value: m.weight_kg }));
 
   return (
-    <PageTransition>
+    <>
       <PageHeader eyebrow={formatWeekdayDate(new Date())} title={`${greeting()}, ${firstName(viewer.client.full_name)}`} />
 
       {steps.length > 0 && (
-        <section aria-label={t.clientHome.nextAction} className="mb-5 grid gap-3">
+        <section aria-label={t.clientHome.nextAction} className="stagger mb-5 grid gap-3">
           {steps.map((s, i) => (
             <Link key={s.key} href={s.href}
-              className={cn("group flex items-center gap-4 rounded-[22px] p-5 transition-transform hover:-translate-y-0.5", i === 0 ? "bg-ink text-white" : "border border-line bg-surface")}>
+              className={cn("group lift flex items-center gap-4 rounded-[22px] p-5", i === 0 ? "sheen bg-ink text-white" : "border border-line bg-surface hover:border-line-strong")}>
               <div className="min-w-0 flex-1">
                 <div className={cn("text-xs font-semibold uppercase tracking-wide", i === 0 ? "text-white/60" : "text-muted")}>{t.clientHome.nextAction}</div>
                 <div className="mt-1 text-[17px] font-bold">{stepLabel[s.key]}</div>
@@ -44,7 +43,7 @@ export default async function ClientHome() {
         </section>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="stagger grid gap-4 lg:grid-cols-2">
         <ClientToday clientId={viewer.client.id} />
         <Card>
           <CardHeader title={t.clientHome.checkinStatus} description={`${formatDate(checkin.period.start)} – ${formatDate(checkin.period.end)}`}
@@ -61,6 +60,6 @@ export default async function ClientHome() {
           <CardBody>{weights.length > 1 ? <TrendChart data={weights} unit="kg" ariaLabel={t.progress.weight} height={180} /> : <p className="text-sm text-muted">{t.progress.noData}</p>}</CardBody>
         </Card>
       </div>
-    </PageTransition>
+    </>
   );
 }

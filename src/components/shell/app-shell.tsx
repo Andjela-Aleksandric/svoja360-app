@@ -36,7 +36,7 @@ export function AppShell({ role, userName, badges, children }: { role: "coach" |
     <div className="min-h-dvh md:grid md:grid-cols-[248px_1fr]">
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-dvh flex-col border-r border-line bg-surface/70 px-3 py-5 backdrop-blur md:flex">
-        <Link href={role === "coach" ? "/trener" : "/klijent"} className="mb-7 px-3"><Logo size={26} /></Link>
+        <Link href={role === "coach" ? "/trener" : "/klijent"} className="mb-7 px-3 [&_svg]:transition-transform [&_svg]:duration-700 hover:[&_svg]:rotate-[360deg]"><Logo size={26} /></Link>
         <nav className="grid gap-0.5" aria-label={t.nav.menu}>
           {nav.map((item) => {
             const Icon = icons[item.icon];
@@ -46,7 +46,7 @@ export function AppShell({ role, userName, badges, children }: { role: "coach" |
               <Link key={item.href} href={item.href} aria-current={on ? "page" : undefined}
                 className={cn("group relative flex h-10 items-center gap-3 rounded-[12px] px-3 text-sm font-semibold transition-colors", on ? "text-ink" : "text-muted hover:bg-hover hover:text-ink")}>
                 {on && <motion.span layoutId="sidebar-active" className="absolute inset-0 rounded-[12px] bg-subtle" transition={{ type: "spring", stiffness: 500, damping: 40 }} />}
-                <Icon className="relative size-[18px]" />
+                <Icon className="relative size-[18px] transition-transform duration-200 group-hover:scale-110" />
                 <span className="relative flex-1">{item.label}</span>
                 {count ? <span className="relative grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1.5 text-[11px] font-bold text-white tabular">{count}</span> : null}
               </Link>
@@ -85,9 +85,10 @@ export function AppShell({ role, userName, badges, children }: { role: "coach" |
             const on = isActive(pathname, item);
             const count = badges?.[item.href];
             return (
-              <Link key={item.href} href={item.href} aria-current={on ? "page" : undefined} className="relative flex flex-col items-center justify-center gap-1 text-[10.5px] font-semibold">
-                <span className={cn("relative grid h-8 w-12 place-items-center rounded-full transition-colors", on ? "bg-ink text-white" : "text-muted")}>
-                  <Icon className="size-[19px]" />
+              <Link key={item.href} href={item.href} aria-current={on ? "page" : undefined} className="relative flex flex-col items-center justify-center gap-1 text-[10.5px] font-semibold transition-transform active:scale-90">
+                <span className={cn("relative grid h-8 w-12 place-items-center rounded-full transition-colors", on ? "text-white" : "text-muted")}>
+                  {on && <motion.span layoutId="bottom-active" className="absolute inset-0 rounded-full bg-ink" transition={{ type: "spring", stiffness: 500, damping: 38 }} />}
+                  <Icon className="relative size-[19px]" />
                   {count ? <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] font-bold text-white">{count}</span> : null}
                 </span>
                 <span className={cn("max-w-full truncate px-1", on ? "text-ink" : "text-muted")}>{shortLabel(item.label)}</span>
@@ -120,7 +121,7 @@ export function AppShell({ role, userName, badges, children }: { role: "coach" |
                   const Icon = icons[item.icon];
                   const on = isActive(pathname, item);
                   return (
-                    <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)} className={cn("flex h-12 items-center gap-3 rounded-[14px] px-3 text-[15px] font-semibold", on ? "bg-subtle text-ink" : "text-ink-2 hover:bg-hover")}>
+                    <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)} className={cn("flex h-12 items-center gap-3 rounded-[14px] px-3 text-[15px] font-semibold transition-colors active:scale-[0.98]", on ? "bg-subtle text-ink" : "text-ink-2 hover:bg-hover")}>
                       <Icon className="size-5 text-muted" /> {item.label}
                       {badges?.[item.href] ? <span className="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1.5 text-[11px] font-bold text-white">{badges[item.href]}</span> : null}
                     </Link>

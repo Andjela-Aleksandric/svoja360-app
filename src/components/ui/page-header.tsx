@@ -1,9 +1,10 @@
 import * as React from "react";
 import { cn } from "@/lib/utils/cn";
+import { CountUp } from "./count-up";
 
 export function PageHeader({ title, description, action, eyebrow, className }: { title: React.ReactNode; description?: React.ReactNode; action?: React.ReactNode; eyebrow?: React.ReactNode; className?: string }) {
   return (
-    <header className={cn("mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between", className)}>
+    <header className={cn("animate-rise mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between", className)}>
       <div className="min-w-0">
         {eyebrow && <div className="mb-1.5 text-[13px] font-semibold text-muted">{eyebrow}</div>}
         <h1 className="text-[26px] font-extrabold leading-tight tracking-[-0.02em] text-ink sm:text-[30px]">{title}</h1>
@@ -16,12 +17,12 @@ export function PageHeader({ title, description, action, eyebrow, className }: {
 
 export function StatCard({ label, value, hint, icon, className }: { label: string; value: React.ReactNode; hint?: React.ReactNode; icon?: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("rounded-[20px] border border-line bg-surface p-5 shadow-[var(--shadow-card)]", className)}>
+    <div className={cn("group/stat lift rounded-[20px] border border-line bg-surface p-5 shadow-[var(--shadow-card)] hover:border-line-strong", className)}>
       <div className="flex items-center justify-between gap-2">
         <span className="text-[13px] font-semibold text-muted">{label}</span>
-        {icon && <span className="text-faint [&_svg]:size-4">{icon}</span>}
+        {icon && <span className="text-faint transition-colors group-hover/stat:text-accent [&_svg]:size-4">{icon}</span>}
       </div>
-      <div className="mt-2 text-[28px] font-extrabold leading-none tracking-tight tabular text-ink">{value}</div>
+      <div className="mt-2 text-[28px] font-extrabold leading-none tracking-tight tabular text-ink">{typeof value === "string" || typeof value === "number" ? <CountUp value={value} /> : value}</div>
       {hint && <div className="mt-2 text-[13px] text-muted">{hint}</div>}
     </div>
   );

@@ -5,8 +5,8 @@ export function Card({ className, interactive, ...props }: React.HTMLAttributes<
   return (
     <div
       className={cn(
-        "rounded-[20px] border border-line bg-surface shadow-[var(--shadow-card)]",
-        interactive && "transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[0_10px_30px_-18px_rgba(20,18,21,0.3)]",
+        "animate-rise rounded-[20px] border border-line bg-surface shadow-[var(--shadow-card)] transition-[border-color,box-shadow] duration-200 hover:border-line-strong",
+        interactive && "lift",
         className,
       )}
       {...props}

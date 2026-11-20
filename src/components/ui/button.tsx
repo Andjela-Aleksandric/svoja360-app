@@ -8,12 +8,12 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: "bg-ink text-white hover:bg-ink-2 shadow-[0_1px_0_rgba(255,255,255,0.08)_inset]",
-        accent: "bg-accent text-white hover:bg-accent-hover",
-        secondary: "bg-surface text-ink border border-line hover:border-line-strong hover:bg-hover",
+        primary: "bg-ink text-white hover:bg-ink-2 hover:-translate-y-px hover:shadow-[0_8px_20px_-10px_rgba(20,18,21,0.6)] shadow-[0_1px_0_rgba(255,255,255,0.08)_inset]",
+        accent: "bg-accent text-white hover:bg-accent-hover hover:-translate-y-px hover:shadow-[0_8px_20px_-10px_rgba(194,37,92,0.7)]",
+        secondary: "bg-surface text-ink border border-line hover:border-line-strong hover:bg-hover hover:-translate-y-px",
         ghost: "text-ink-2 hover:bg-hover hover:text-ink",
         subtle: "bg-subtle text-ink hover:bg-line",
-        danger: "bg-danger text-white hover:brightness-110",
+        danger: "bg-danger text-white hover:brightness-110 hover:-translate-y-px",
         "danger-ghost": "text-danger hover:bg-danger-soft",
         link: "text-accent underline-offset-4 hover:underline rounded-none px-0 h-auto",
       },

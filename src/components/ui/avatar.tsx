@@ -13,10 +13,10 @@ export function Avatar({ name, src, size = 40, className }: { name: string | nul
   const style = { width: size, height: size, fontSize: Math.max(11, Math.round(size * 0.36)) };
   if (src) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt="" style={style} className={cn("shrink-0 rounded-full object-cover", className)} />;
+    return <img src={src} alt="" style={style} className={cn("shrink-0 rounded-full object-cover transition-transform duration-200 group-hover:scale-105", className)} />;
   }
   return (
-    <span aria-hidden style={style} className={cn("inline-grid shrink-0 place-items-center rounded-full font-bold", palette[hash(name ?? "") % palette.length], className)}>
+    <span aria-hidden style={style} className={cn("inline-grid shrink-0 place-items-center rounded-full font-bold transition-transform duration-200 group-hover:scale-105", palette[hash(name ?? "") % palette.length], className)}>
       {initials(name)}
     </span>
   );

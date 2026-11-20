@@ -42,9 +42,9 @@ export function ExerciseLibrary({ exercises, muscles }: { exercises: ExerciseIte
         <Button variant={showArchived ? "primary" : "secondary"} onClick={() => setShowArchived(!showArchived)}><Archive className="size-4" />{t.clients.filters.archived}</Button>
       </div>
       {list.length === 0 ? <EmptyState icon={<Search />} title={t.exercises.empty} /> : (
-        <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="stagger grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
           {list.map((e) => (
-            <li key={e.id} className="group flex flex-col rounded-[18px] border border-line bg-surface p-4">
+            <li key={e.id} className="group lift flex flex-col rounded-[18px] border border-line bg-surface p-4 hover:border-line-strong">
               <div className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="font-bold leading-tight">{e.name}</div>

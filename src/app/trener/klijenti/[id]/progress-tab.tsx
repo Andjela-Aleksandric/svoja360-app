@@ -21,13 +21,13 @@ export async function ProgressTab({ clientId }: { clientId: string }) {
   const adherence = series.filter((p) => p.values.strength_planned).map((p) => ({ date: p.periodEnd, value: Math.round(((p.values.strength_done ?? 0) / (p.values.strength_planned || 1)) * 100) }));
   return (
     <div className="grid gap-4">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="stagger grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label={t.progress.weight} value={weights.length ? `${formatNumber(weights.at(-1)!.value)} kg` : "–"} hint={weights.length > 1 ? `${t.progress.changeSinceStart}: ${signed((weights.at(-1)!.value as number) - (weights[0].value as number))} kg` : undefined} />
         <StatCard label={t.strengthAnalytics.totalVolume} value={`${formatNumber(analytics.totalVolume / 1000, 1)} t`} hint={t.workout.sessionsCount(analytics.sessions)} />
         <StatCard label={t.running.totalDistance} value={`${formatNumber(run.totalKm, 1)} km`} />
         <StatCard label={t.progress.trainingAdherence} value={adherence.length ? `${adherence.at(-1)!.value}%` : "–"} />
       </div>
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="stagger grid gap-4 lg:grid-cols-2">
         <Card><CardHeader title={t.progress.weight} /><CardBody>{weights.length > 1 ? <TrendChart data={weights} unit="kg" height={180} ariaLabel={t.progress.weight} /> : <p className="text-sm text-muted">{t.progress.noData}</p>}</CardBody></Card>
         <Card><CardHeader title={t.measurements.waist_cm} /><CardBody>{waist.length > 1 ? <TrendChart data={waist} unit="cm" height={180} ariaLabel={t.measurements.waist_cm} /> : <p className="text-sm text-muted">{t.progress.noData}</p>}</CardBody></Card>
         <Card><CardHeader title={t.strengthAnalytics.weeklyVolume} /><CardBody><TrendChart data={analytics.weeklyVolume} kind="bar" unit="kg" digits={0} height={180} ariaLabel={t.strengthAnalytics.weeklyVolume} /></CardBody></Card>

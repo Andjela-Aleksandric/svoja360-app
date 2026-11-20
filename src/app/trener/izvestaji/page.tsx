@@ -37,10 +37,10 @@ export default async function CoachCheckinsPage({ searchParams }: { searchParams
       </div>
       {tab !== "missing" ? (
         (tab === "toReview" ? data.toReview : data.reviewed).length === 0 ? <EmptyState icon={<ClipboardCheck />} title={t.checkins.empty} /> : (
-          <ul className="overflow-hidden rounded-[20px] border border-line bg-surface">
+          <ul className="stagger overflow-hidden rounded-[20px] border border-line bg-surface">
             {(tab === "toReview" ? data.toReview : data.reviewed).map((r) => (
               <li key={r.id} className="border-b border-line/70 last:border-0">
-                <Link href={`/trener/izvestaji/${r.id}`} className="flex items-center gap-3 px-4 py-3.5 hover:bg-hover sm:px-5">
+                <Link href={`/trener/izvestaji/${r.id}`} className="group flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-hover sm:px-5">
                   <Avatar name={r.client_name} size={38} />
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-semibold">{r.client_name}</div>
@@ -54,7 +54,7 @@ export default async function CoachCheckinsPage({ searchParams }: { searchParams
           </ul>
         )
       ) : data.missing.length === 0 ? <EmptyState icon={<ClipboardCheck />} title={t.checkins.empty} /> : (
-        <ul className="overflow-hidden rounded-[20px] border border-line bg-surface">
+        <ul className="stagger overflow-hidden rounded-[20px] border border-line bg-surface">
           {data.missing.map((c) => (
             <li key={c.id} className="flex items-center gap-3 border-b border-line/70 px-4 py-3 last:border-0 sm:px-5">
               <Link href={`/trener/klijenti/${c.id}?tab=checkins`} className="flex min-w-0 flex-1 items-center gap-3">

@@ -18,9 +18,9 @@ export function NutritionPlanView({ plan, foods }: { plan: NutritionTree; foods:
       {plan.notes && <p className="whitespace-pre-wrap rounded-[16px] bg-accent-soft/50 px-4 py-3 text-[14.5px] leading-relaxed">{plan.notes}</p>}
       {plan.days.length > 1 && <div className="no-scrollbar overflow-x-auto"><Segmented value={day.id} onChange={setDayId} options={plan.days.map((d) => ({ value: d.id, label: d.name }))} /></div>}
       <TargetBars m={dayMacros(day, map)} targets={{ kcal: plan.kcal_target, protein: plan.protein_g, carbs: plan.carbs_g, fat: plan.fat_g }} />
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="stagger grid gap-3 md:grid-cols-2">
         {day.meals.map((m) => (
-          <section key={m.id} className="rounded-[22px] border border-line bg-surface p-4">
+          <section key={m.id} className="lift rounded-[22px] border border-line bg-surface p-4 hover:border-line-strong">
             <div className="mb-2 flex items-baseline justify-between gap-2">
               <h3 className="text-[16px] font-bold">{m.name}</h3>
               {m.meal_time && <span className="inline-flex items-center gap-1 text-xs font-semibold text-muted"><Clock className="size-3.5" />{m.meal_time}</span>}

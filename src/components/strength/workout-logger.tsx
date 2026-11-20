@@ -197,7 +197,7 @@ export function WorkoutLogger({ programId, day, weekNumber, exercises, previous,
                       <NumCell label={t.strength.reps} value={s.reps} min={0} max={200} integer onChange={(v) => patch(s.key, { reps: v })} className="h-10" />
                       <NumCell label={t.strength.weight} value={s.weight_kg} min={0} max={500} step={0.25} onChange={(v) => patch(s.key, { weight_kg: v })} className="h-10" />
                       <button type="button" onClick={() => toggle(s, e.rest_seconds)} aria-pressed={s.is_completed} aria-label={t.workout.setDone}
-                        className={cn("grid size-10 place-items-center rounded-[12px] border-2 transition-all active:scale-90", s.is_completed ? "border-success bg-success text-white" : "border-line-strong text-transparent hover:border-ink")}>
+                        className={cn("grid size-10 place-items-center rounded-[12px] border-2 transition-all active:scale-90", s.is_completed ? "animate-pop border-success bg-success text-white" : "border-line-strong text-transparent hover:border-ink hover:text-faint")}>
                         <Check className="size-5" strokeWidth={3} />
                       </button>
                     </div>

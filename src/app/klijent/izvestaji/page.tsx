@@ -50,7 +50,7 @@ export default async function ClientCheckinsPage() {
       {history.filter((h) => h.status !== "draft").length === 0 ? (
         <EmptyState icon={<ClipboardCheck />} title={t.checkins.noHistory} />
       ) : (
-        <ul className="overflow-hidden rounded-[20px] border border-line bg-surface">
+        <ul className="stagger overflow-hidden rounded-[20px] border border-line bg-surface">
           {history.filter((h) => h.status !== "draft").map((h) => (
             <li key={h.id} className="border-b border-line/70 last:border-0">
               <Link href={`/klijent/izvestaji/${h.id}`} className="flex items-center gap-3 px-4 py-3.5 hover:bg-hover">
