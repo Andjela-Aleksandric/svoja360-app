@@ -18,7 +18,7 @@ const workout = z.object({
   workout_type: z.enum(["easy", "recovery", "long", "progression", "tempo", "threshold_intervals", "vo2max_intervals", "hill_repeats", "race_pace", "fartlek"]),
   title: z.string().trim().min(1).max(120), notes: z.string().max(2000).nullable(), position: z.number().int().min(0), segments: z.array(segment).max(30),
 });
-const week = z.object({ id: uuid, week_number: z.number().int().min(1).max(52), target_km: z.number().min(0).max(300).nullable(), notes: z.string().max(1000).nullable(), workouts: z.array(workout).max(14) });
+const week = z.object({ id: uuid, week_number: z.number().int().min(1).max(52), target_km: z.number().min(0).max(300).nullable(), target_minutes: z.number().int().min(0).max(3000).nullable().optional().default(null), notes: z.string().max(1000).nullable(), workouts: z.array(workout).max(14) });
 const zone = z.object({ name: z.string().trim().min(1).max(30), pace_min: ni(120, 1200), pace_max: ni(120, 1200), hr_min: ni(40, 230), hr_max: ni(40, 230) });
 const tree = z.object({ id: uuid, name: z.string().trim().min(1).max(120), description: z.string().max(2000).nullable(), start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(), zones: z.array(zone).max(8), weeks: z.array(week).min(1).max(52) });
 

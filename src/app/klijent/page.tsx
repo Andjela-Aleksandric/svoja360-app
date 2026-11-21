@@ -54,8 +54,9 @@ export default async function ClientHome() {
               </div>
             )}
             {r && (
-              <HeroStat label={H.heroRun} value={formatNumber(r.km, 1)} accent="mint" hint={r.target ? H.heroOf(`${formatNumber(r.target, 0)} km`) : t.dashboard.heroRuns(r.done)}>
-                {r.target ? <span className="mt-3 block h-1 overflow-hidden rounded-full bg-band-line"><span className="block h-full origin-left animate-[meter_1s_cubic-bezier(.2,.7,.2,1)_both] rounded-full bg-mint" style={{ width: `${Math.min(100, (r.km / r.target) * 100)}%` }} /></span> : null}
+              <HeroStat label={r.targetMin != null ? H.heroRunMin : H.heroRun} value={r.targetMin != null ? r.min : formatNumber(r.km, 1)} accent="mint"
+                hint={r.targetMin != null ? H.heroOf(`${r.targetMin} min`) : r.target ? H.heroOf(`${formatNumber(r.target, 0)} km`) : t.dashboard.heroRuns(r.done)}>
+                {(r.targetMin || r.target) ? <span className="mt-3 block h-1 overflow-hidden rounded-full bg-band-line"><span className="block h-full origin-left animate-[meter_1s_cubic-bezier(.2,.7,.2,1)_both] rounded-full bg-mint" style={{ width: `${Math.min(100, r.targetMin ? (r.min / r.targetMin) * 100 : (r.km / r.target!) * 100)}%` }} /></span> : null}
               </HeroStat>
             )}
             <HeroStat label={H.checkinStatus} value={checkin.status === "submitted" || checkin.status === "reviewed" ? "✓" : checkin.status === "notDue" ? "–" : "!"} accent={checkin.status === "missing" || checkin.status === "draft" ? "rasp" : "mint"} hint={checkinText} href="/klijent/izvestaji" />

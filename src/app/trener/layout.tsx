@@ -12,6 +12,7 @@ export default async function CoachLayout({ children }: { children: React.ReactN
   const { count } = await supabase
     .from("questionnaire_submissions")
     .select("id", { count: "exact", head: true })
+    .eq("kind", "checkin")
     .eq("status", "submitted");
   return (
     <AppShell role="coach" collapsed={(await cookies()).get(SIDEBAR_COOKIE)?.value === "1"} userName={viewer.fullName ?? viewer.email} badges={{ "/trener/izvestaji": count ?? 0 }}>

@@ -28,12 +28,12 @@ export function WorkoutCard({ w, done }: { w: RWorkout; done: boolean }) {
           <div className="font-bold">{w.title}</div>
           <div className="text-xs text-muted">{t.running.types[w.workout_type]}{w.day_of_week ? ` · ${t.weekdays[w.day_of_week - 1]}` : ""}</div>
         </div>
-        {done ? <Badge tone="success"><Check className="size-3.5" />{t.running.done}</Badge> : <span className="text-xs font-semibold tabular text-muted">~{formatNumber(dist / 1000, 1)} km · {formatDuration(dur)}</span>}
+        {done ? <Badge tone="success"><Check className="size-3.5" />{t.running.done}</Badge> : <span className="text-xs font-semibold tabular text-muted">{[dist > 0 ? `~${formatNumber(dist / 1000, 1)} km` : null, dur > 0 ? formatDuration(dur) : null].filter(Boolean).join(" · ")}</span>}
       </div>
       <ol className="grid gap-1 text-[13px]">
         {w.segments.map((s) => (
           <li key={s.id} className="flex gap-2">
-            <span className="w-24 shrink-0 font-semibold text-muted">{t.running.segmentTypes[s.segment_type]}</span>
+            <span className="w-24 shrink-0 font-semibold text-muted">{w.segments.length === 1 && s.segment_type === "main" ? t.running.wholeRun : t.running.segmentTypes[s.segment_type]}</span>
             <span className="text-ink-2">
               {s.repeat_count > 1 && <strong>{s.repeat_count}× </strong>}
               {s.distance_m ? `${s.distance_m >= 1000 ? `${formatNumber(s.distance_m / 1000, 2)} km` : `${s.distance_m} m`}` : s.duration_s ? formatDuration(s.duration_s) : ""}
@@ -63,11 +63,16 @@ export function RunningView({ tree, currentWeek, activities, clientId, canDelete
   const workoutOptions = (tree?.weeks ?? []).filter((w) => Math.abs(w.week_number - currentWeek) <= 1).flatMap((w) => w.workouts.map((x) => ({ id: x.id, label: `${t.strength.week(w.week_number)} · ${x.title}` })));
   const weekKmDone = a.weeklyKm.at(-1)?.value ?? 0;
   const plannedKm = week ? week.target_km ?? week.workouts.reduce((s, w) => s + estimateWorkoutDistanceM(w.segments), 0) / 1000 : null;
+  const weekStartIso = a.weeklyKm.at(-1)?.date ?? "";
+  const minDone = Math.round(activities.filter((x) => x.performed_on >= weekStartIso).reduce((s, x) => s + x.duration_s, 0) / 60);
+  const byMinutes = week?.target_minutes != null;
 
   return (
     <div className="grid gap-4">
       <div className="stagger grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label={t.running.thisWeek} value={`${formatNumber(weekKmDone, 1)} km`} hint={plannedKm ? `${t.workout.planned}: ${formatNumber(plannedKm, 1)} km` : undefined} />
+        {byMinutes
+          ? <StatCard label={t.running.thisWeek} value={`${minDone} min`} hint={`${t.workout.planned}: ${week!.target_minutes} min · ${formatNumber(weekKmDone, 1)} km`} />
+          : <StatCard label={t.running.thisWeek} value={`${formatNumber(weekKmDone, 1)} km`} hint={plannedKm ? `${t.workout.planned}: ${formatNumber(plannedKm, 1)} km` : undefined} />}
         <StatCard label={t.running.totalDistance} value={`${formatNumber(a.totalKm, 1)} km`} />
         <StatCard label={t.running.avgPace} value={a.avgPace ? formatPace(a.avgPace) : "–"} hint={a.avgPace ? "min/km" : undefined} />
         <StatCard label={t.running.longest} value={a.longest ? `${formatNumber(a.longest.distance_m / 1000, 1)} km` : "–"} hint={a.longest ? formatDate(a.longest.performed_on) : undefined} />

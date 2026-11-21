@@ -2,6 +2,8 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { getCheckinDeadline } from "./settings";
 import { deadlineFor, isPastDeadline, previousWeek } from "@/lib/utils/periods";
+import { estimateWorkoutDistanceM as estD, estimateWorkoutDurationS as estS } from "@/lib/utils/running";
+import type { RSegment } from "@/lib/running/types";
 
 export interface NextStep { key: "initial" | "initialContinue" | "diary" | "checkin" | "checkinContinue"; href: string; overdue?: boolean; deadline?: { date: string; hour: number } }
 
@@ -36,7 +38,7 @@ export interface ClientWeek {
   days: { date: string; dow: number; items: WeekItem[]; loggedStrength: number; loggedKm: number }[];
   flexible: WeekItem[];
   strength: { done: number; planned: number; weekNo: number; weeks: number; name: string } | null;
-  running: { km: number; target: number | null; planned: number; done: number; weekNo: number; weeks: number; name: string } | null;
+  running: { km: number; target: number | null; min: number; targetMin: number | null; planned: number; done: number; weekNo: number; weeks: number; name: string } | null;
   nutrition: { name: string; kcal: number | null; protein: number | null; carbs: number | null; fat: number | null } | null;
   prs: { name: string; weight: number | null; reps: number | null; e1rm: number | null }[];
   weeklyKm: { date: string; value: number }[];
@@ -44,7 +46,7 @@ export interface ClientWeek {
 
 /** Everything the client home shows: this week's plan (strength + running), what's done, and a progress snapshot. */
 export async function getClientWeek(clientId: string): Promise<ClientWeek> {
-  const [{ getActiveProgramId, getProgramTree, listSessions, getStrengthAnalytics }, { getActiveRunningProgramId, getRunningTree, listActivities }, { getActivePlanId, getNutritionTree }, { currentWeekNumber }, { computeRunningAnalytics }, fmt, { weekStart }, { estimateWorkoutDistanceM }, { t }] = await Promise.all([
+  const [{ getActiveProgramId, getProgramTree, listSessions, getStrengthAnalytics }, { getActiveRunningProgramId, getRunningTree, listActivities }, { getActivePlanId, getNutritionTree }, { currentWeekNumber }, { computeRunningAnalytics }, fmt, { weekStart }, , { t }] = await Promise.all([
     import("./strength"), import("./running"), import("./nutrition"), import("@/lib/strength/types"), import("@/lib/running/analytics"), import("@/lib/utils/format"), import("@/lib/utils/periods"), import("@/lib/utils/running"), import("@/lib/i18n/sr"),
   ]);
   const today = fmt.todayISO();
@@ -70,13 +72,14 @@ export async function getClientWeek(clientId: string): Promise<ClientWeek> {
   }
   let running: ClientWeek["running"] = null;
   const km = Math.round(weekRuns.reduce((a, r) => a + r.distance_m, 0) / 100) / 10;
+  const minutes = Math.round(weekRuns.reduce((a, r) => a + r.duration_s, 0) / 60);
   if (run && run.weeks.length) {
     const n = currentWeekNumber(run.start_date, today, run.weeks.length);
     const wk = run.weeks[n - 1];
-    for (const w of wk.workouts) items.push({ kind: "run", id: w.id, title: w.title, sub: `~${fmt.formatNumber(estimateWorkoutDistanceM(w.segments) / 1000, 1)} km`, href: "/klijent/trcanje", done: runDone.has(w.id), dow: w.day_of_week });
-    running = { km, target: wk.target_km, planned: wk.workouts.length, done: wk.workouts.filter((w) => runDone.has(w.id)).length, weekNo: n, weeks: run.weeks.length, name: run.name };
+    for (const w of wk.workouts) items.push({ kind: "run", id: w.id, title: w.title, sub: runSub(w.segments, fmt.formatNumber), href: "/klijent/trcanje", done: runDone.has(w.id), dow: w.day_of_week });
+    running = { km, target: wk.target_km, min: minutes, targetMin: wk.target_minutes, planned: wk.workouts.length, done: wk.workouts.filter((w) => runDone.has(w.id)).length, weekNo: n, weeks: run.weeks.length, name: run.name };
   } else if (weekRuns.length) {
-    running = { km, target: null, planned: 0, done: weekRuns.length, weekNo: 0, weeks: 0, name: "" };
+    running = { km, target: null, min: minutes, targetMin: null, planned: 0, done: weekRuns.length, weekNo: 0, weeks: 0, name: "" };
   }
 
   const days = Array.from({ length: 7 }, (_, i) => {
@@ -102,4 +105,11 @@ export async function getClientWeek(clientId: string): Promise<ClientWeek> {
     nutrition: plan ? { name: plan.name, kcal: plan.kcal_target, protein: plan.protein_g, carbs: plan.carbs_g, fat: plan.fat_g } : null,
     prs, weeklyKm: ra.weeklyKm,
   };
+}
+
+function runSub(segments: RSegment[], formatNumber: (v: number, d?: number) => string): string {
+  const d = estD(segments), sec = estS(segments);
+  if (d > 0) return `~${formatNumber(d / 1000, 1)} km`;
+  if (sec > 0) return `${Math.round(sec / 60)} min`;
+  return "";
 }

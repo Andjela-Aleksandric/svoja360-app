@@ -158,7 +158,9 @@ function BoardRow({ r }: { r: WeekRow }) {
         </Cell>
         <Cell label={D.colRunning} icon={<Footprints className="size-3.5" />}>
           {run ? (
-            <><span className="tabular"><b>{formatNumber(run.km, 1)}</b><span className="text-muted">{run.target ? ` / ${formatNumber(run.target, 0)} km` : " km"}</span></span>{run.target ? <Meter value={run.km} max={run.target} tone="ink" className="mt-1.5" /> : null}</>
+            run.targetMin != null
+              ? <><span className="tabular"><b>{run.min}</b><span className="text-muted"> / {run.targetMin} min</span></span>{run.targetMin ? <Meter value={run.min} max={run.targetMin} tone="ink" className="mt-1.5" /> : null}</>
+              : <><span className="tabular"><b>{formatNumber(run.km, 1)}</b><span className="text-muted">{run.target ? ` / ${formatNumber(run.target, 0)} km` : " km"}</span></span>{run.target ? <Meter value={run.km} max={run.target} tone="ink" className="mt-1.5" /> : null}</>
           ) : <span className="text-faint">–</span>}
         </Cell>
         <Cell label={D.colCheckin}>

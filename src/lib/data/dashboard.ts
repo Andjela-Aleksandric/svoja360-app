@@ -28,7 +28,7 @@ export interface ActivityItem {
 export interface WeekRow {
   client: Pick<ClientListItem, "id" | "full_name" | "phone_e164">;
   strength: { done: number; planned: number } | null;
-  running: { km: number; target: number | null; runs: number } | null;
+  running: { km: number; target: number | null; min: number; targetMin: number | null; runs: number } | null;
   lastCheckin: string | null;
   weight: { now: number; delta: number | null } | null;
   flagged: boolean;
@@ -68,10 +68,10 @@ export async function getCoachDashboard() {
     supabase.from("questionnaire_submissions").select("id, client_id, kind, submitted_at").neq("status", "draft").not("submitted_at", "is", null).order("submitted_at", { ascending: false }).limit(10),
     supabase.from("body_measurements").select("id, client_id, weight_kg, created_at").not("weight_kg", "is", null).eq("source", "manual").order("created_at", { ascending: false }).limit(10),
     supabase.from("workout_sessions").select("client_id, training_day_id").eq("status", "completed").gte("performed_on", thisMonday).in("client_id", activeIds.length ? activeIds : none),
-    supabase.from("running_activities").select("client_id, distance_m").gte("performed_on", thisMonday).in("client_id", activeIds.length ? activeIds : none),
+    supabase.from("running_activities").select("client_id, distance_m, duration_s").gte("performed_on", thisMonday).in("client_id", activeIds.length ? activeIds : none),
     supabase.from("training_weeks").select("id, program_id, week_number").in("program_id", strengthIds.length ? strengthIds : none),
     supabase.from("training_days").select("id, week_id").in("program_id", strengthIds.length ? strengthIds : none),
-    supabase.from("running_weeks").select("program_id, week_number, target_km").in("program_id", runningIds.length ? runningIds : none),
+    supabase.from("running_weeks").select("*").in("program_id", runningIds.length ? runningIds : none),
     supabase.from("body_measurements").select("client_id, measured_on, weight_kg").not("weight_kg", "is", null).gte("measured_on", addDays(today, -42)).in("client_id", activeIds.length ? activeIds : none).order("measured_on"),
   ]);
 
@@ -125,7 +125,8 @@ export async function getCoachDashboard() {
     if (rp || myRuns.length) {
       const ws = rp ? (rWeeks.data ?? []).filter((w) => w.program_id === rp.id) : [];
       const n = rp ? currentWeekNumber(rp.start_date, today, ws.length) : 0;
-      running = { km: Math.round(myRuns.reduce((a, r) => a + r.distance_m, 0) / 100) / 10, target: numOr(ws.find((w) => w.week_number === n)?.target_km), runs: myRuns.length };
+      const wk = ws.find((w) => w.week_number === n) as { target_km?: unknown; target_minutes?: unknown } | undefined;
+      running = { km: Math.round(myRuns.reduce((a, r) => a + r.distance_m, 0) / 100) / 10, target: numOr(wk?.target_km), min: Math.round(myRuns.reduce((a, r) => a + r.duration_s, 0) / 60), targetMin: numOr(wk?.target_minutes), runs: myRuns.length };
     }
     const hist = (history.data ?? []).filter((h) => h.client_id === c.id);
     const weight = c.latestWeight != null ? { now: c.latestWeight, delta: hist.length > 1 ? Math.round((Number(hist[hist.length - 1].weight_kg) - Number(hist[0].weight_kg)) * 10) / 10 : null } : null;

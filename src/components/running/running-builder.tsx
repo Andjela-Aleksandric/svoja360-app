@@ -2,7 +2,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { Archive, ArrowDown, ArrowUp, CheckCircle2, Copy, CopyPlus, LayoutTemplate, MoreHorizontal, Play, Plus, Save, Trash2, X } from "lucide-react";
+import { Archive, ArrowDown, ArrowUp, CheckCircle2, Minimize2, Split, Copy, CopyPlus, LayoutTemplate, MoreHorizontal, Play, Plus, Save, Trash2, X } from "lucide-react";
 import type { RSegment, RunningTree, RWeek, RWorkout, SegmentType, WorkoutType, Zone } from "@/lib/running/types";
 import { t } from "@/lib/i18n/sr";
 import { cn } from "@/lib/utils/cn";
@@ -16,6 +16,7 @@ import { ConfirmDialog, Modal } from "@/components/ui/modal";
 import { Dropdown, DropdownContent, DropdownItem, DropdownSeparator, DropdownTrigger } from "@/components/ui/dropdown";
 import { useToast } from "@/components/ui/toast";
 import { NumCell } from "@/components/strength/num-cell";
+import { Segmented } from "@/components/ui/tabs";
 import { deleteProgramAction, setProgramStatusAction } from "@/app/trener/trening/actions";
 import { copyRunningProgramAction, saveRunningProgramAction } from "@/app/trener/trcanje/actions";
 import { TimeCell } from "./time-cell";
@@ -71,6 +72,11 @@ export function RunningBuilder({ initial, clients, clientName }: { initial: Runn
   });
 
   const weekKm = week ? week.workouts.reduce((s, w) => s + estimateWorkoutDistanceM(w.segments), 0) / 1000 : 0;
+  const weekMin = week ? Math.round(week.workouts.reduce((s, w) => s + estimateWorkoutDurationS(w.segments), 0) / 60) : 0;
+  const [structured, setStructured] = useState<Record<string, boolean>>({});
+  const isSimple = (w: RWorkout) => !structured[w.id] && w.segments.length <= 1 && (w.segments[0]?.repeat_count ?? 1) === 1 && (!w.segments[0] || w.segments[0].segment_type === "main");
+  const [unitPref, setUnitPref] = useState<Record<string, "km" | "min">>({});
+  const targetUnit: "km" | "min" = week ? (week.target_minutes != null ? "min" : week.target_km != null ? "km" : unitPref[week.id] ?? "km") : "km";
 
   return (
     <div className="pb-24">
@@ -104,16 +110,23 @@ export function RunningBuilder({ initial, clients, clientName }: { initial: Runn
         {tree.weeks.map((w, i) => (
           <button key={w.id} role="tab" aria-selected={i === wi} onClick={() => setWi(i)} className={cn("h-10 shrink-0 rounded-full px-4 text-sm font-semibold", i === wi ? "bg-ink text-white" : "bg-surface text-muted ring-1 ring-line hover:text-ink")}>{t.strength.week(w.week_number)}</button>
         ))}
-        <button onClick={() => { update((x) => ({ ...x, weeks: [...x.weeks, { id: uid(), week_number: x.weeks.length + 1, target_km: null, notes: null, workouts: [] }] })); setWi(tree.weeks.length); }} disabled={tree.weeks.length >= 52}
+        <button onClick={() => { update((x) => ({ ...x, weeks: [...x.weeks, { id: uid(), week_number: x.weeks.length + 1, target_km: null, target_minutes: null, notes: null, workouts: [] }] })); setWi(tree.weeks.length); }} disabled={tree.weeks.length >= 52}
           aria-label={t.strength.addWeek} className="grid size-10 shrink-0 place-items-center rounded-full text-muted ring-1 ring-line-strong hover:text-ink"><Plus className="size-4" /></button>
       </div>
 
       {week && (
         <div className="mb-4 flex flex-wrap items-end gap-3">
-          <label className="grid w-40 gap-1 text-[12px] font-semibold text-muted">{t.running.targetKm} (km)
-            <NumCell label={t.running.targetKm} value={week.target_km} min={0} max={300} step={0.1} onChange={(v) => updWeek((w) => ({ ...w, target_km: v }))} className="h-10" />
-          </label>
-          <span className="pb-2.5 text-sm text-muted">{t.running.plannedEstimate}: <strong className="tabular text-ink">{formatNumber(weekKm, 1)} km</strong></span>
+          <div className="grid gap-1 text-[12px] font-semibold text-muted">
+            <span>{t.running.weekTarget} <span className="font-normal text-faint">({t.running.optional})</span></span>
+            <div className="flex items-center gap-2">
+              <Segmented size="sm" value={targetUnit} onChange={(u) => { setUnitPref((m) => ({ ...m, [week.id]: u })); updWeek((w) => (u === "km" ? { ...w, target_minutes: null } : { ...w, target_km: null })); }}
+                options={[{ value: "km", label: t.running.unitKm }, { value: "min", label: t.running.unitMin }]} />
+              {targetUnit === "km"
+                ? <NumCell label={t.running.targetKm} value={week.target_km} min={0} max={300} step={0.1} onChange={(v) => updWeek((w) => ({ ...w, target_km: v }))} className="h-10 w-24" />
+                : <NumCell label={t.running.weekTarget} value={week.target_minutes} min={0} max={3000} integer onChange={(v) => updWeek((w) => ({ ...w, target_minutes: v }))} className="h-10 w-24" />}
+            </div>
+          </div>
+          <span className="pb-2.5 text-sm text-muted">{t.running.plannedEstimate}: <strong className="tabular text-ink">{[weekKm > 0 ? `${formatNumber(weekKm, 1)} km` : null, weekMin > 0 ? formatDuration(weekMin * 60) : null].filter(Boolean).join(" · ") || "–"}</strong></span>
           <span className="flex-1" />
           <Button size="sm" variant="secondary" disabled={!week.workouts.length} onClick={() => {
             update((x) => {
@@ -148,12 +161,21 @@ export function RunningBuilder({ initial, clients, clientName }: { initial: Runn
                     <Button variant="ghost" size="icon-sm" aria-label={t.common.delete} onClick={() => updWeek((x) => ({ ...x, workouts: x.workouts.filter((y) => y.id !== w.id) }))}><Trash2 /></Button>
                   </div>
                 </div>
-                <div className="grid gap-2 p-3 sm:p-4">
-                  <div className="text-xs text-muted">{t.running.estimate}: <strong className="tabular text-ink">{formatNumber(dist / 1000, 1)} km · {formatDuration(dur)}</strong></div>
+                <div className="grid gap-3 p-3 sm:p-4">
+                  {isSimple(w) ? (
+                    <SimpleRun w={w} zones={tree.zones} onChange={(seg) => updWo(w.id, (x) => ({ ...x, segments: seg ? [seg] : [] }))}
+                      onSplit={() => updWo(w.id, (x) => ({ ...x, segments: x.segments.length ? x.segments : [newSegment("main", 0)] }))} forceStructured={(id) => setStructured((m) => ({ ...m, [id]: true }))} />
+                  ) : (
+                  <>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="text-xs text-muted">{t.running.estimate}: <strong className="tabular text-ink">{[dist > 0 ? `${formatNumber(dist / 1000, 1)} km` : null, dur > 0 ? formatDuration(dur) : null].filter(Boolean).join(" · ") || "–"}</strong></div>
+                    <button type="button" onClick={() => { setStructured((m) => ({ ...m, [w.id]: false })); updWo(w.id, (x) => ({ ...x, segments: [mergeSegments(x.segments)] })); }}
+                      className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold text-muted ring-1 ring-line transition-colors hover:text-ink hover:ring-ink"><Minimize2 className="size-3.5" />{t.running.merge}</button>
+                  </div>
                   <div className="overflow-x-auto">
-                    <table className="w-full min-w-[860px] text-sm">
+                    <table className="w-full min-w-[940px] text-sm">
                       <thead><tr className="text-left text-[11px] font-semibold text-muted">
-                        <th className="w-32 py-1">{t.common.status}</th><th className="w-14 py-1">{t.running.repeat}</th><th className="w-20 py-1">{t.running.distance} (m)</th><th className="w-20 py-1">{t.running.duration}</th>
+                        <th className="w-36 py-1">{t.running.part}</th><th className="w-16 py-1 pr-2">{t.running.repeatShort}</th><th className="w-24 py-1">{t.running.distance} (m)</th><th className="w-20 py-1">{t.running.duration}</th>
                         <th className="w-36 py-1">{t.running.pace} (min/km)</th><th className="w-32 py-1">{t.running.heartRate}</th><th className="w-20 py-1">{t.running.recovery}</th><th className="py-1">{t.running.instructions}</th><th className="w-8" />
                       </tr></thead>
                       <tbody>
@@ -180,6 +202,8 @@ export function RunningBuilder({ initial, clients, clientName }: { initial: Runn
                       <button key={k} type="button" disabled={w.segments.length >= 30} onClick={() => updWo(w.id, (x) => ({ ...x, segments: [...x.segments, newSegment(k, x.segments.length)] }))} className="inline-flex h-8 items-center gap-1 rounded-full px-2.5 text-[13px] font-semibold text-accent hover:bg-accent-soft"><Plus className="size-3.5" />{t.running.segmentTypes[k]}</button>
                     ))}
                   </div>
+                  </>
+                  )}
                   <input aria-label={t.running.instructions} placeholder={t.running.workoutNotes} value={w.notes ?? ""} maxLength={2000} onChange={(e) => updWo(w.id, (x) => ({ ...x, notes: e.target.value || null }))} className="h-10 rounded-[12px] border border-line bg-surface px-3 text-sm outline-none focus:border-ink" />
                 </div>
               </motion.section>
@@ -227,6 +251,50 @@ function ZonesEditor({ zones, onChange }: { zones: Zone[]; onChange: (z: Zone[])
       {zones.length === 0 && <p className="text-sm text-muted">{t.running.noZones}</p>}
       <Button variant="secondary" disabled={zones.length >= 8} onClick={() => onChange([...zones, { name: `Z${zones.length + 1}`, pace_min: null, pace_max: null, hr_min: null, hr_max: null }])}><Plus className="size-4" />{t.running.addZone}</Button>
       <p className="text-xs text-muted">{zones.map((z) => `${z.name}: ${formatPace(z.pace_min)}–${formatPace(z.pace_max)}`).join(" · ")}</p>
+    </div>
+  );
+}
+
+/** A whole run as one part: merges a structured workout into a single main segment (totals kept). */
+function mergeSegments(segs: RSegment[]): RSegment {
+  const dist = estimateWorkoutDistanceM(segs), dur = estimateWorkoutDurationS(segs);
+  const main = segs.find((x) => x.segment_type === "main") ?? segs[0];
+  return { ...(main ?? newSegment("main", 0)), id: main?.id ?? uid(), position: 0, segment_type: "main", repeat_count: 1, recovery_s: null,
+    distance_m: segs.some((x) => x.distance_m) ? dist || null : null, duration_s: segs.some((x) => x.distance_m) ? null : dur || null };
+}
+
+/** One-part run: choose time, distance or no target. Pace and heart rate are optional. */
+function SimpleRun({ w, zones, onChange, onSplit, forceStructured }: { w: RWorkout; zones: Zone[]; onChange: (s: RSegment | null) => void; onSplit: () => void; forceStructured: (id: string) => void }) {
+  const seg = w.segments[0] ?? null;
+  const [pref, setPref] = useState<"time" | "distance" | "feel">(seg?.distance_m ? "distance" : seg?.duration_s ? "time" : "time");
+  const mode = seg?.distance_m ? "distance" : seg?.duration_s ? "time" : pref;
+  const patch = (p: Partial<RSegment>) => onChange({ ...(seg ?? newSegment("main", 0)), segment_type: "main", repeat_count: 1, ...p });
+  const lbl = "grid gap-1 text-[12px] font-semibold text-muted";
+  return (
+    <div className="grid gap-3">
+      <div className="grid gap-3 sm:grid-cols-[auto_150px_1fr_1fr] sm:items-end">
+        <div className={lbl}>{t.running.measureBy}
+          <Segmented size="sm" value={mode} onChange={(m) => { setPref(m); patch(m === "time" ? { distance_m: null } : m === "distance" ? { duration_s: null } : { distance_m: null, duration_s: null }); }}
+            options={[{ value: "time", label: t.running.byTime }, { value: "distance", label: t.running.byDistance }, { value: "feel", label: t.running.byFeel }]} />
+        </div>
+        {mode === "time" && <label className={lbl}>{t.running.duration}<TimeCell kind="duration" label={t.running.duration} value={seg?.duration_s ?? null} min={60} max={36000} placeholder="45:00" onChange={(v) => patch({ duration_s: v, distance_m: null })} className="h-10" /></label>}
+        {mode === "distance" && <label className={lbl}>{t.running.distanceKm}<NumCell label={t.running.distanceKm} value={seg?.distance_m ? Math.round(seg.distance_m / 10) / 100 : null} min={0.1} max={100} step={0.1} onChange={(v) => patch({ distance_m: v ? Math.round(v * 1000) : null, duration_s: null })} className="h-10" /></label>}
+        {mode === "feel" && <span className="hidden sm:block" />}
+        <label className={lbl}><span>{t.running.pace} <span className="font-normal text-faint">({t.running.optional})</span></span>
+          <div className="flex items-center gap-1"><TimeCell kind="pace" label={t.running.paceFrom} value={seg?.pace_min_s_km ?? null} min={120} max={1200} onChange={(v) => patch({ pace_min_s_km: v })} className="h-10" /><span className="text-faint">–</span><TimeCell kind="pace" label={t.running.paceTo} value={seg?.pace_max_s_km ?? null} min={120} max={1200} onChange={(v) => patch({ pace_max_s_km: v })} className="h-10" /></div>
+        </label>
+        <label className={lbl}><span>{t.running.heartRate} <span className="font-normal text-faint">({t.running.optional})</span></span>
+          <div className="flex items-center gap-1"><NumCell label={`${t.running.heartRate} od`} value={seg?.hr_min ?? null} min={40} max={230} integer onChange={(v) => patch({ hr_min: v })} className="h-10" /><span className="text-faint">–</span><NumCell label={`${t.running.heartRate} do`} value={seg?.hr_max ?? null} min={40} max={230} integer onChange={(v) => patch({ hr_max: v })} className="h-10" /></div>
+        </label>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        {zones.length > 0 && (
+          <div className="w-44"><NativeSelect aria-label={t.running.zones} value="" onChange={(e) => { const z = zones[Number(e.target.value)]; if (z) patch({ pace_min_s_km: z.pace_min, pace_max_s_km: z.pace_max, hr_min: z.hr_min, hr_max: z.hr_max }); }} className="h-9 text-[13px]"><option value="">{t.running.applyZone}</option>{zones.map((z, k) => <option key={k} value={k}>{z.name}</option>)}</NativeSelect></div>
+        )}
+        <span className="flex-1" />
+        <button type="button" onClick={() => { forceStructured(w.id); onSplit(); }} title={t.running.splitHelp}
+          className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold text-accent ring-1 ring-accent/30 transition-colors hover:bg-accent-soft"><Split className="size-3.5" />{t.running.split}</button>
+      </div>
     </div>
   );
 }

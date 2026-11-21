@@ -7,7 +7,7 @@ export interface RSegment {
   recovery_s: number | null; instructions: string | null;
 }
 export interface RWorkout { id: string; day_of_week: number | null; scheduled_date: string | null; workout_type: WorkoutType; title: string; notes: string | null; position: number; segments: RSegment[] }
-export interface RWeek { id: string; week_number: number; target_km: number | null; notes: string | null; workouts: RWorkout[] }
+export interface RWeek { id: string; week_number: number; target_km: number | null; target_minutes: number | null; notes: string | null; workouts: RWorkout[] }
 export interface Zone { name: string; pace_min: number | null; pace_max: number | null; hr_min: number | null; hr_max: number | null }
 export interface RunningTree { id: string; client_id: string | null; name: string; description: string | null; start_date: string | null; status: "draft" | "active" | "completed" | "archived"; zones: Zone[]; weeks: RWeek[] }
 
