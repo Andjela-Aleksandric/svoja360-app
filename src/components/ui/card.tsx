@@ -18,8 +18,8 @@ export function CardHeader({ className, title, description, action }: { classNam
   return (
     <div className={cn("flex items-start justify-between gap-4 px-5 pt-5 sm:px-6 sm:pt-6", className)}>
       <div className="min-w-0">
-        <h2 className="font-display text-[23px] leading-tight text-ink">{title}</h2>
-        {description && <p className="mt-0.5 text-[13px] text-muted">{description}</p>}
+        <h2 className="text-[17.5px] font-bold leading-snug tracking-[-0.01em] text-ink">{title}</h2>
+        {description && <p className="mt-0.5 text-[13.5px] text-muted">{description}</p>}
       </div>
       {action && <div className="shrink-0">{action}</div>}
     </div>

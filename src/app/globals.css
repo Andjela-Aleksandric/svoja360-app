@@ -13,8 +13,8 @@
   --color-hover: #efedef;
   --color-ink: #0e0c10;
   --color-ink-2: #2b2630;
-  --color-muted: #5c5660;
-  --color-faint: #9a939e;
+  --color-muted: #534d57;
+  --color-faint: #847d88;
   --color-line: #dedbdf;
   --color-line-strong: #c9c4ca;
   --color-accent: #c2255c;
@@ -26,7 +26,7 @@
   --color-band: #0e0c10;
   --color-band-2: #1c181e;
   --color-band-fg: #f6f3f5;
-  --color-band-muted: #a9a1ad;
+  --color-band-muted: #b8b0bc;
   --color-band-line: #2f2932;
   --color-success: #1d6b50;
   --color-success-soft: #ddf3ea;
@@ -40,6 +40,12 @@
   --font-sans: "Manrope Variable", "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+
+  /* Slightly larger small text for readability (Tailwind's text-xs / text-sm). */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.45;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.5;
 
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -66,6 +72,8 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overscroll-behavior-y: none;
+    font-size: 15.5px;
+    line-height: 1.55;
   }
   ::selection {
     background: var(--color-mint-soft);
@@ -184,18 +192,18 @@
 }
 
 /* Children of .stagger rise one after another (first 12, the rest together). */
-.stagger > * { animation: rise 0.45s var(--ease-out-soft) both; }
-.stagger > :nth-child(2) { animation-delay: 40ms; }
-.stagger > :nth-child(3) { animation-delay: 80ms; }
-.stagger > :nth-child(4) { animation-delay: 120ms; }
-.stagger > :nth-child(5) { animation-delay: 160ms; }
-.stagger > :nth-child(6) { animation-delay: 200ms; }
-.stagger > :nth-child(7) { animation-delay: 240ms; }
-.stagger > :nth-child(8) { animation-delay: 280ms; }
-.stagger > :nth-child(9) { animation-delay: 320ms; }
-.stagger > :nth-child(10) { animation-delay: 360ms; }
-.stagger > :nth-child(11) { animation-delay: 400ms; }
-.stagger > :nth-child(n + 12) { animation-delay: 440ms; }
+.stagger > * { animation: rise 0.32s var(--ease-out-soft) both; }
+.stagger > :nth-child(2) { animation-delay: 25ms; }
+.stagger > :nth-child(3) { animation-delay: 50ms; }
+.stagger > :nth-child(4) { animation-delay: 75ms; }
+.stagger > :nth-child(5) { animation-delay: 100ms; }
+.stagger > :nth-child(6) { animation-delay: 125ms; }
+.stagger > :nth-child(7) { animation-delay: 150ms; }
+.stagger > :nth-child(8) { animation-delay: 175ms; }
+.stagger > :nth-child(9) { animation-delay: 200ms; }
+.stagger > :nth-child(10) { animation-delay: 225ms; }
+.stagger > :nth-child(11) { animation-delay: 250ms; }
+.stagger > :nth-child(n + 12) { animation-delay: 275ms; }
 
 /* Hover lift for anything clickable that looks like a card. */
 @utility lift {
@@ -258,8 +266,8 @@
 }
 @utility eyebrow {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--color-muted);
 }
@@ -372,3 +380,8 @@ header:hover .eyebrow-line::before, .group:hover > .eyebrow-line::before { width
 }
 .row-hover:hover { background: var(--color-hover); }
 .row-hover:hover::before { transform: scaleY(1); }
+
+/* Respect users who prefer less motion: keep the app calm and fast. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; transition-duration: 1ms !important; }
+}

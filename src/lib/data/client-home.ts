@@ -44,15 +44,15 @@ export interface ClientWeek {
 
 /** Everything the client home shows: this week's plan (strength + running), what's done, and a progress snapshot. */
 export async function getClientWeek(clientId: string): Promise<ClientWeek> {
-  const [{ getActiveProgramId, getProgramTree, listSessions, getStrengthAnalytics, listExercises }, { getActiveRunningProgramId, getRunningTree, listActivities }, { getActivePlanId, getNutritionTree }, { currentWeekNumber }, { computeRunningAnalytics }, fmt, { weekStart }, { estimateWorkoutDistanceM }, { t }] = await Promise.all([
+  const [{ getActiveProgramId, getProgramTree, listSessions, getStrengthAnalytics }, { getActiveRunningProgramId, getRunningTree, listActivities }, { getActivePlanId, getNutritionTree }, { currentWeekNumber }, { computeRunningAnalytics }, fmt, { weekStart }, { estimateWorkoutDistanceM }, { t }] = await Promise.all([
     import("./strength"), import("./running"), import("./nutrition"), import("@/lib/strength/types"), import("@/lib/running/analytics"), import("@/lib/utils/format"), import("@/lib/utils/periods"), import("@/lib/utils/running"), import("@/lib/i18n/sr"),
   ]);
   const today = fmt.todayISO();
   const monday = weekStart(today);
   const [pid, rid, nid] = await Promise.all([getActiveProgramId(clientId), getActiveRunningProgramId(clientId), getActivePlanId(clientId)]);
-  const [prog, run, plan, sessions, activities, sa, exercises] = await Promise.all([
+  const [prog, run, plan, sessions, activities, sa] = await Promise.all([
     pid ? getProgramTree(pid) : null, rid ? getRunningTree(rid) : null, nid ? getNutritionTree(nid) : null,
-    listSessions(clientId, { since: monday }), listActivities(clientId, 400), getStrengthAnalytics(clientId, 12), listExercises(true),
+    listSessions(clientId, { since: monday }), listActivities(clientId, 400), getStrengthAnalytics(clientId, 12),
   ]);
 
   const done = sessions.filter((s) => s.status === "completed");
@@ -89,8 +89,11 @@ export async function getClientWeek(clientId: string): Promise<ClientWeek> {
     };
   });
 
-  const names = new Map(exercises.map((e) => [e.id, e.name]));
-  const prs = [...sa.analytics.prs].filter((p) => p.e1rm != null).sort((a, b) => (b.e1rm ?? 0) - (a.e1rm ?? 0)).slice(0, 4)
+  const top = [...sa.analytics.prs].filter((p) => p.e1rm != null).sort((a, b) => (b.e1rm ?? 0) - (a.e1rm ?? 0)).slice(0, 4);
+  const supabase = await createClient();
+  const { data: exRows } = top.length ? await supabase.from("exercises").select("id, name").in("id", top.map((p) => p.exercise_id)) : { data: [] };
+  const names = new Map((exRows ?? []).map((e) => [e.id as string, e.name as string]));
+  const prs = top
     .map((p) => ({ name: names.get(p.exercise_id) ?? "", weight: p.maxWeight, reps: p.maxWeightReps, e1rm: p.e1rm }));
   const ra = computeRunningAnalytics(activities, 8, today);
 

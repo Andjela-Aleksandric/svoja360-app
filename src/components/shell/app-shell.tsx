@@ -1,18 +1,18 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
   LayoutDashboard, Users, Dumbbell, Footprints, Apple, ClipboardCheck, BookOpen, Carrot, Settings,
-  Home, LineChart, UserRound, MoreHorizontal, LogOut, X,
+  Home, LineChart, UserRound, MoreHorizontal, LogOut, X, PanelLeftClose, PanelLeftOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { t } from "@/lib/i18n/sr";
 import { Logo } from "@/components/brand/logo";
 import { Avatar } from "@/components/ui/avatar";
 import type { IconName, NavItem } from "./nav-config";
-import { coachNav, clientNav } from "./nav-config";
+import { coachNav, clientNav, SIDEBAR_COOKIE } from "./nav-config";
 
 const icons: Record<IconName, React.ComponentType<{ className?: string }>> = {
   dashboard: LayoutDashboard, users: Users, dumbbell: Dumbbell, running: Footprints, apple: Apple,
@@ -24,44 +24,71 @@ function isActive(pathname: string, item: NavItem) {
   return item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + "/");
 }
 
-export function AppShell({ role, userName, badges, children }: { role: "coach" | "client"; userName: string | null; badges?: Record<string, number>; children: React.ReactNode }) {
+export function AppShell({ role, userName, badges, collapsed: initialCollapsed = false, children }: { role: "coach" | "client"; userName: string | null; badges?: Record<string, number>; collapsed?: boolean; children: React.ReactNode }) {
   const pathname = usePathname();
   const nav = role === "coach" ? coachNav : clientNav;
   const primary = nav.filter((n) => n.primary);
   const secondary = nav.filter((n) => !n.primary);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(initialCollapsed);
   const moreActive = secondary.some((s) => isActive(pathname, s));
+  const toggle = useCallback(() => {
+    setCollapsed((c) => {
+      const next = !c;
+      document.cookie = `${SIDEBAR_COOKIE}=${next ? "1" : "0"}; path=/; max-age=31536000; samesite=lax`;
+      return next;
+    });
+  }, []);
+  // Ctrl/Cmd + B toggles the sidebar, like most desktop apps.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b") { e.preventDefault(); toggle(); } };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [toggle]);
+  const ToggleIcon = collapsed ? PanelLeftOpen : PanelLeftClose;
 
   return (
-    <div className="min-h-dvh md:grid md:grid-cols-[248px_1fr]">
+    <div className={cn("min-h-dvh md:grid md:transition-[grid-template-columns] md:duration-300 md:ease-[cubic-bezier(.2,.7,.2,1)]", collapsed ? "md:grid-cols-[84px_1fr]" : "md:grid-cols-[256px_1fr]")}>
       {/* Desktop sidebar */}
-      <aside className="band sticky top-0 hidden h-dvh flex-col overflow-hidden bg-band px-3 py-6 text-band-fg md:flex">
-        <span aria-hidden className="pointer-events-none absolute -right-24 -top-24 size-56 rounded-full bg-accent/25 blur-3xl" />
-        <span aria-hidden className="pointer-events-none absolute -bottom-28 -left-20 size-56 rounded-full bg-mint/15 blur-3xl" />
-        <Link href={role === "coach" ? "/trener" : "/klijent"} className="relative mb-2 px-3"><Logo size={26} inverted /></Link>
-        <div className="eyebrow relative mb-6 px-3 text-[10px] text-band-muted">{role === "coach" ? t.roles.coach : t.roles.client} · {t.nav.menu}</div>
-        <nav className="grid gap-0.5" aria-label={t.nav.menu}>
+      <aside className={cn("band sticky top-0 z-30 hidden h-dvh flex-col bg-band py-5 text-band-fg md:flex", collapsed ? "px-3" : "px-3")}>
+        <span aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+          <span className="absolute -right-28 -top-28 size-72 rounded-full bg-[radial-gradient(closest-side,rgba(194,37,92,0.28),transparent)]" />
+          <span className="absolute -bottom-32 -left-24 size-72 rounded-full bg-[radial-gradient(closest-side,rgba(142,214,184,0.16),transparent)]" />
+        </span>
+        <div className={cn("relative mb-6 flex items-center", collapsed ? "flex-col gap-3" : "justify-between pl-3")}>
+          <Link href={role === "coach" ? "/trener" : "/klijent"} title="SVOJA 360"><Logo size={26} inverted withText={!collapsed} /></Link>
+          <button type="button" onClick={toggle} aria-label={collapsed ? t.nav.expand : t.nav.collapse} aria-expanded={!collapsed} title={`${collapsed ? t.nav.expand : t.nav.collapse} (Ctrl+B)`}
+            className="grid size-9 place-items-center rounded-full text-band-muted transition-colors hover:bg-band-2 hover:text-mint">
+            <ToggleIcon className="size-[18px]" />
+          </button>
+        </div>
+        <nav className="relative grid gap-1" aria-label={t.nav.menu}>
           {nav.map((item) => {
             const Icon = icons[item.icon];
             const on = isActive(pathname, item);
             const count = badges?.[item.href];
             return (
-              <Link key={item.href} href={item.href} aria-current={on ? "page" : undefined}
-                className={cn("group relative flex h-11 items-center gap-3 rounded-[14px] px-3 text-sm font-semibold transition-colors", on ? "text-band" : "text-band-muted hover:bg-band-2 hover:text-band-fg")}>
-                {on && <motion.span layoutId="sidebar-active" className="absolute inset-0 rounded-[14px] bg-mint shadow-[0_10px_30px_-12px_rgba(142,214,184,0.7)]" transition={{ type: "spring", stiffness: 500, damping: 40 }} />}
-                <Icon className="relative size-[18px] transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-6" />
-                <span className="relative flex-1 transition-transform duration-200 group-hover:translate-x-0.5">{item.label}</span>
-                {count ? <span className="relative grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1.5 text-[11px] font-bold text-white tabular">{count}</span> : null}
+              <Link key={item.href} href={item.href} aria-current={on ? "page" : undefined} aria-label={collapsed ? item.label : undefined}
+                className={cn("group/nav relative flex h-11 items-center gap-3 rounded-[14px] text-[15px] font-semibold transition-colors", collapsed ? "justify-center px-0" : "px-3", on ? "text-band" : "text-band-muted hover:bg-band-2 hover:text-band-fg")}>
+                {on && <motion.span layoutId="sidebar-active" className="absolute inset-0 rounded-[14px] bg-mint" transition={{ type: "spring", stiffness: 500, damping: 40 }} />}
+                <Icon className="relative size-[19px] shrink-0 transition-transform duration-200 group-hover/nav:scale-110" />
+                {!collapsed && <span className="relative flex-1 truncate">{item.label}</span>}
+                {count ? <span className={cn("grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1.5 text-[11px] font-bold text-white tabular", collapsed ? "absolute right-1 top-1 h-4 min-w-4 px-1 text-[10px]" : "relative")}>{count}</span> : null}
+                {collapsed && (
+                  <span role="tooltip" className="pointer-events-none absolute left-[calc(100%+10px)] top-1/2 z-50 -translate-y-1/2 translate-x-[-4px] whitespace-nowrap rounded-[10px] bg-ink px-3 py-1.5 text-[13px] font-semibold text-white opacity-0 shadow-[var(--shadow-pop)] transition-all duration-150 group-hover/nav:translate-x-0 group-hover/nav:opacity-100 group-focus-visible/nav:opacity-100">{item.label}</span>
+                )}
               </Link>
             );
           })}
         </nav>
-        <div className="relative mt-auto flex items-center gap-3 rounded-[16px] border border-band-line bg-band-2 p-2.5">
+        <div className={cn("relative mt-auto flex items-center rounded-[16px] border border-band-line bg-band-2", collapsed ? "flex-col gap-2 p-2" : "gap-3 p-2.5")}>
           <Avatar name={userName} size={34} />
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-semibold">{userName ?? ""}</div>
-            <div className="text-xs text-band-muted">{role === "coach" ? t.roles.coach : t.roles.client}</div>
-          </div>
+          {!collapsed && (
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-semibold">{userName ?? ""}</div>
+              <div className="text-xs text-band-muted">{role === "coach" ? t.roles.coach : t.roles.client}</div>
+            </div>
+          )}
           <form action="/auth/odjava" method="post" onSubmit={clearUserCache}>
             <button type="submit" aria-label={t.common.signOut} title={t.common.signOut} className="grid size-8 place-items-center rounded-full text-band-muted transition-colors hover:bg-accent hover:text-white">
               <LogOut className="size-4" />
@@ -76,8 +103,8 @@ export function AppShell({ role, userName, badges, children }: { role: "coach" |
         <Avatar name={userName} size={30} />
       </header>
 
-      <main id="sadrzaj" className="min-w-0 px-4 pb-[calc(96px+env(safe-area-inset-bottom))] pt-5 sm:px-6 md:px-10 md:pb-16 md:pt-10">
-        <div className="mx-auto w-full max-w-[1180px]">{children}</div>
+      <main id="sadrzaj" className="min-w-0 px-4 pb-[calc(96px+env(safe-area-inset-bottom))] pt-5 sm:px-6 md:px-8 md:pb-16 md:pt-9 xl:px-12">
+        <div className={cn("mx-auto w-full transition-[max-width] duration-300", collapsed ? "max-w-[1320px]" : "max-w-[1200px]")}>{children}</div>
       </main>
 
       {/* Mobile bottom navigation */}

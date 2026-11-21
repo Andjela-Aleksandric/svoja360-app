@@ -9,13 +9,13 @@ import { Words } from "./page-header";
 export function HeroBand({ eyebrow, title, line, action, children, className }: { eyebrow?: React.ReactNode; title: string; line?: React.ReactNode; action?: React.ReactNode; children?: React.ReactNode; className?: string }) {
   return (
     <section className={cn("band group relative isolate mb-6 overflow-hidden rounded-[28px] px-5 py-7 sm:px-9 sm:py-9", className)}>
-      <span aria-hidden className="pointer-events-none absolute -right-20 -top-28 -z-10 size-[340px] rounded-full bg-accent/30 blur-[90px] transition-transform duration-[1.4s] group-hover:translate-x-[-30px] group-hover:translate-y-[20px]" />
-      <span aria-hidden className="pointer-events-none absolute -bottom-36 left-1/4 -z-10 size-[300px] rounded-full bg-mint/20 blur-[90px] transition-transform duration-[1.4s] group-hover:translate-x-[40px]" />
+      <span aria-hidden className="pointer-events-none absolute -right-32 -top-40 -z-10 size-[520px] rounded-full bg-[radial-gradient(closest-side,rgba(194,37,92,0.38),transparent)] transition-transform duration-[1.4s] will-change-transform group-hover:-translate-x-8 group-hover:translate-y-5" />
+      <span aria-hidden className="pointer-events-none absolute -bottom-48 left-1/4 -z-10 size-[460px] rounded-full bg-[radial-gradient(closest-side,rgba(142,214,184,0.22),transparent)] transition-transform duration-[1.4s] will-change-transform group-hover:translate-x-10" />
       <span aria-hidden className="pointer-events-none absolute inset-0 -z-10 opacity-[0.06] [background-image:radial-gradient(circle_at_1px_1px,#fff_1px,transparent_0)] [background-size:22px_22px]" />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           {eyebrow && <div className="eyebrow eyebrow-line mb-3 text-band-muted">{eyebrow}</div>}
-          <h1 className="font-display text-[38px] leading-[1.04] sm:text-[54px]"><Words text={title} /></h1>
+          <h1 className="font-display text-[34px] leading-[1.06] sm:text-[50px]"><Words text={title} /></h1>
           {line && <p className="mt-3 max-w-xl animate-rise text-[15px] leading-relaxed text-band-muted [animation-delay:250ms]">{line}</p>}
         </div>
         {action && <div className="flex shrink-0 animate-rise flex-wrap gap-2 [animation-delay:200ms]">{action}</div>}
@@ -40,7 +40,7 @@ export function HeroStat({ label, value, hint, href, accent, children }: { label
       {children}
     </>
   );
-  const cls = "group/hs relative rounded-[20px] border border-band-line bg-white/[0.03] p-4 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-mint/50 hover:bg-white/[0.06] sm:p-5";
+  const cls = "group/hs relative rounded-[20px] border border-band-line bg-white/[0.04] p-4 transition-all duration-300 hover:-translate-y-1 hover:border-mint/50 hover:bg-white/[0.06] sm:p-5";
   return href ? <Link href={href} className={cls}>{body}</Link> : <div className={cls}>{body}</div>;
 }
 

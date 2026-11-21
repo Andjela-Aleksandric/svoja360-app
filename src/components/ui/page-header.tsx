@@ -20,7 +20,7 @@ export function PageHeader({ title, description, action, eyebrow, className }: {
     <header className={cn("mb-7 flex flex-col gap-4 sm:mb-9 sm:flex-row sm:items-end sm:justify-between", className)}>
       <div className="min-w-0">
         {eyebrow && <div className="eyebrow eyebrow-line mb-3">{eyebrow}</div>}
-        <h1 className="font-display text-[38px] leading-[1.04] text-ink sm:text-[52px]">{typeof title === "string" ? <Words text={title} /> : title}</h1>
+        <h1 className="font-display text-[36px] leading-[1.06] text-ink sm:text-[48px]">{typeof title === "string" ? <Words text={title} /> : title}</h1>
         {description && <p className="mt-2.5 max-w-2xl animate-rise text-[15px] leading-relaxed text-muted [animation-delay:200ms]">{description}</p>}
       </div>
       {action && <div className="flex shrink-0 animate-rise flex-wrap items-center gap-2 [animation-delay:150ms]">{action}</div>}
@@ -44,7 +44,7 @@ export function StatCard({ label, value, hint, icon, className, tone = "rasp" }:
 export function SectionTitle({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <div className="mb-3 flex items-center justify-between gap-3">
-      <h2 className="font-display text-[24px] leading-tight">{children}</h2>
+      <h2 className="text-[19px] font-bold leading-snug tracking-[-0.01em]">{children}</h2>
       {action}
     </div>
   );

@@ -78,7 +78,7 @@ export const Select = React.forwardRef<HTMLButtonElement, SelectProps>(function 
           aria-label={aria["aria-label"]}
           aria-invalid={aria["aria-invalid"]}
           className={cn(
-            "group/sel ripple-host flex h-12 w-full min-w-0 items-center justify-between gap-2 rounded-[14px] border-[1.5px] border-line bg-surface px-4 text-left text-[15px] text-ink outline-none transition-[border-color,box-shadow] duration-200",
+            "group/sel ripple-host flex h-12 w-full min-w-0 items-center justify-between gap-2 rounded-[14px] border-[1.5px] border-line bg-surface px-4 text-left text-[16px] text-ink md:text-[15px] outline-none transition-[border-color,box-shadow] duration-200",
             "hover:border-line-strong focus-visible:border-ink focus-visible:ring-4 focus-visible:ring-accent-soft data-[state=open]:border-ink data-[state=open]:ring-4 data-[state=open]:ring-accent-soft",
             "disabled:cursor-not-allowed disabled:bg-subtle disabled:text-muted aria-[invalid=true]:border-danger",
             className,

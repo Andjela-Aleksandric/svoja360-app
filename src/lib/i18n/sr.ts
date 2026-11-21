@@ -97,6 +97,8 @@ export const t = {
   },
 
   nav: {
+    collapse: "Skupi meni",
+    expand: "Proširi meni",
     coach: {
       dashboard: "Kontrolna tabla",
       clients: "Klijenti",

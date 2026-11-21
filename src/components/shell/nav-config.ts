@@ -34,3 +34,6 @@ export const clientNav: NavItem[] = [
   { href: "/klijent/izvestaji", label: t.nav.client.checkins, icon: "clipboard" },
   { href: "/klijent/profil", label: t.nav.client.profile, icon: "user" },
 ];
+
+/** Cookie that remembers whether the desktop sidebar is collapsed. */
+export const SIDEBAR_COOKIE = "svoja_sidebar";
