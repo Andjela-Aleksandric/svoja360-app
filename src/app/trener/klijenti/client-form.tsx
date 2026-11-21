@@ -12,7 +12,7 @@ import { CheckboxField } from "@/components/ui/choice";
 import { useToast } from "@/components/ui/toast";
 import { createClientAction, updateClientAction } from "./actions";
 
-type State = ActionResult<{ id: string; inviteFailed: boolean }> | ActionResult | null;
+type State = ActionResult<{ id: string; inviteFailed: boolean; inviteError: string | null }> | ActionResult | null;
 
 export function ClientForm({ client, onDone }: { client?: ClientRow; onDone?: () => void }) {
   const router = useRouter();
@@ -31,8 +31,8 @@ export function ClientForm({ client, onDone }: { client?: ClientRow; onDone?: ()
       onDone?.();
       router.refresh();
     } else {
-      const data = (state as { data: { id: string; inviteFailed: boolean } }).data;
-      toast(data.inviteFailed ? t.errors.inviteFailed : invite ? `${t.clients.created} ${t.clients.account.inviteSent}` : t.clients.created, data.inviteFailed ? "error" : "success");
+      const data = (state as { data: { id: string; inviteFailed: boolean; inviteError: string | null } }).data;
+      toast(data.inviteFailed ? `${t.clients.created} ${data.inviteError ?? t.errors.inviteFailed}` : invite ? `${t.clients.created} ${t.clients.account.inviteSent}` : t.clients.created, data.inviteFailed ? "error" : "success");
       router.push(`/trener/klijenti/${data.id}`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

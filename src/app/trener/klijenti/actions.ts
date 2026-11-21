@@ -56,18 +56,32 @@ function siteUrl() {
   return (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 }
 
-async function sendInvite(email: string, fullName: string): Promise<boolean> {
+/** Sends the invitation. Returns null on success, otherwise a message that says what to fix. */
+async function sendInvite(email: string, fullName: string): Promise<string | null> {
   const admin = createAdminClient();
-  if (!admin) return false;
+  if (!admin) return t.errors.missingServiceKey;
   const { error } = await admin.auth.admin.inviteUserByEmail(email, {
     data: { full_name: fullName },
     redirectTo: `${siteUrl()}/nova-lozinka`,
   });
-  if (error) console.error("[invite]", error.status, error.message);
-  return !error;
+  if (!error) return null;
+  console.error("[invite]", error.status, error.code, error.message);
+  return inviteErrorText(error);
 }
 
-export async function createClientAction(_: unknown, fd: FormData): Promise<ActionResult<{ id: string; inviteFailed: boolean }>> {
+function inviteErrorText(error: { status?: number; code?: string; message: string }): string {
+  const msg = (error.message || "").toLowerCase();
+  if (error.status === 401 || error.status === 403 || msg.includes("invalid api key") || msg.includes("jwt"))
+    return t.errors.inviteBadKey;
+  if (error.code === "email_exists" || msg.includes("already been registered") || msg.includes("already registered"))
+    return t.errors.inviteEmailExists;
+  if (error.status === 429 || msg.includes("rate limit"))
+    return t.errors.inviteRateLimit;
+  if (msg.includes("smtp") || msg.includes("sending") || msg.includes("email") || (error.status ?? 0) >= 500)
+    return `${t.errors.inviteSmtp} (${error.message})`;
+  return `${t.errors.inviteFailed} (${error.message})`;
+}
+export async function createClientAction(_: unknown, fd: FormData): Promise<ActionResult<{ id: string; inviteFailed: boolean; inviteError: string | null }>> {
   await assertCoach();
   const parsed = parseClientForm(fd);
   if ("error" in parsed) return parsed.error!;
@@ -77,10 +91,10 @@ export async function createClientAction(_: unknown, fd: FormData): Promise<Acti
     if (error.code === "23505") return fail(t.errors.emailTaken, { email: t.errors.emailTaken });
     return dbError(error, "create client");
   }
-  let inviteFailed = false;
-  if (fd.get("send_invite") === "on") inviteFailed = !(await sendInvite(parsed.values.email, parsed.values.full_name));
+  const inviteError = fd.get("send_invite") === "on" ? await sendInvite(parsed.values.email, parsed.values.full_name) : null;
+  const inviteFailed = !!inviteError;
   revalidatePath("/trener", "layout");
-  return { ok: true, data: { id: data.id as string, inviteFailed } };
+  return { ok: true, data: { id: data.id as string, inviteFailed, inviteError } };
 }
 
 export async function updateClientAction(_: unknown, fd: FormData): Promise<ActionResult> {
@@ -110,9 +124,10 @@ export async function resendInviteAction(clientId: string): Promise<ActionResult
   if (data.user_id) {
     // Already has an account: send a password link instead of a new invite.
     const { error } = await admin.auth.resetPasswordForEmail(data.email, { redirectTo: `${siteUrl()}/nova-lozinka` });
-    if (error) return fail(t.errors.inviteFailed);
-  } else if (!(await sendInvite(data.email, data.full_name))) {
-    return fail(t.errors.inviteFailed);
+    if (error) { console.error("[reset]", error.status, error.message); return fail(inviteErrorText(error)); }
+  } else {
+    const err = await sendInvite(data.email, data.full_name);
+    if (err) return fail(err);
   }
   revalidatePath(`/trener/klijenti/${clientId}`);
   return { ok: true };
