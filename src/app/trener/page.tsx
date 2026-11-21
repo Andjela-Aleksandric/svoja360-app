@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertTriangle, ArrowUpRight, ClipboardCheck, Dumbbell, Footprints, Apple, UserPlus, Activity, Sparkles, TrendingDown, TrendingUp, Minus } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, Check, ClipboardCheck, Dumbbell, Footprints, Apple, UserPlus, Activity, Sparkles, TrendingDown, TrendingUp, Minus } from "lucide-react";
 import { requireCoach } from "@/lib/auth";
 import { getCoachDashboard, type WeekRow } from "@/lib/data/dashboard";
 import { t } from "@/lib/i18n/sr";
@@ -19,7 +19,7 @@ const D = t.dashboard;
 
 export default async function CoachDashboard() {
   const viewer = await requireCoach();
-  const { stats, attention, activity, period, weekBoard, week } = await getCoachDashboard();
+  const { stats, attention, activity, period, weekBoard, week, todayPlan } = await getCoachDashboard();
   const urgent = attention.filter((a) => a.reasons.some((r) => r !== "noProgram" && r !== "initialPending")).length;
   const quick = [
     { href: "/trener/klijenti/novi", label: D.addClient, icon: UserPlus },
@@ -50,6 +50,30 @@ export default async function CoachDashboard() {
           <HeroStat label={D.heroKm} value={formatNumber(week.km, 1)} hint={D.heroRuns(week.runs)} />
         </div>
       </HeroBand>
+
+      {todayPlan.length > 0 && (
+        <Card className="mb-4">
+          <CardHeader title={D.todayTitle} description={D.todayDesc(todayPlan.reduce((a, r) => a + r.items.filter((i) => i.done).length, 0), todayPlan.reduce((a, r) => a + r.items.length, 0))} />
+          <CardBody className="stagger grid gap-2 pt-4 sm:grid-cols-2 xl:grid-cols-3">
+            {todayPlan.map((r) => (
+              <Link key={r.client.id} href={`/trener/klijenti/${r.client.id}`} className="group lift flex items-center gap-3 rounded-[16px] border border-line p-3 hover:border-ink">
+                <Avatar name={r.client.full_name} size={38} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-semibold transition-colors group-hover:text-accent">{r.client.full_name}</span>
+                  <span className="mt-1 flex flex-wrap gap-1">
+                    {r.items.map((it, k) => (
+                      <span key={k} className={cn("inline-flex max-w-full items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-semibold", it.done ? "bg-mint-soft text-mint-ink" : it.kind === "strength" ? "bg-accent-soft text-accent" : "bg-subtle text-ink-2")}>
+                        {it.done ? <Check className="size-3" strokeWidth={3} /> : it.kind === "strength" ? <Dumbbell className="size-3" /> : <Footprints className="size-3" />}
+                        <span className="truncate">{it.title}</span>
+                      </span>
+                    ))}
+                  </span>
+                </span>
+              </Link>
+            ))}
+          </CardBody>
+        </Card>
+      )}
 
       <Card className="mb-4">
         <CardHeader title={D.weekBoard} description={D.weekBoardDesc}

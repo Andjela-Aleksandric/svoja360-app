@@ -2,6 +2,9 @@ import Link from "next/link";
 import { Mail, Phone } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getMeasurements } from "@/lib/data/clients";
+import { getClientWeek } from "@/lib/data/client-home";
+import { WeekLegend, WeekStrip } from "@/components/plan/week-strip";
+import { ComplianceTable } from "@/components/plan/compliance-table";
 import type { ClientRow, NoteRow, ProgramSummary, SubmissionRow } from "@/lib/data/types";
 import { t } from "@/lib/i18n/sr";
 import { ageFromBirthDate, formatDate, formatNumber } from "@/lib/utils/format";
@@ -14,7 +17,8 @@ import { CheckinBadge } from "@/components/clients/status";
 
 export async function OverviewTab({ client, pinned }: { client: ClientRow; pinned: NoteRow[] }) {
   const supabase = await createClient();
-  const [measurements, strength, running, nutrition, submissions] = await Promise.all([
+  const [week, measurements, strength, running, nutrition, submissions] = await Promise.all([
+    getClientWeek(client.id, { snapshot: false, historyWeeks: 6, startDate: client.start_date }),
     getMeasurements(client.id),
     supabase.from("training_programs").select("id, client_id, name, status, start_date").eq("client_id", client.id).eq("status", "active"),
     supabase.from("running_programs").select("id, client_id, name, status, start_date").eq("client_id", client.id).eq("status", "active"),
@@ -41,6 +45,18 @@ export async function OverviewTab({ client, pinned }: { client: ClientRow; pinne
         <StatCard label={t.profile.overview.weightChange} value={change != null ? `${change > 0 ? "+" : ""}${formatNumber(change)} kg` : "–"} hint={weights[0] ? `${t.common.from} ${formatDate(weights[0].date)}` : undefined} />
         <StatCard label={t.profile.overview.since} value={formatDate(client.start_date)} />
       </div>
+
+      <Card className="lg:col-span-3">
+        <CardHeader title={t.profile.overview.thisWeek} description={[week.strength && `${t.clientHome.legendStrength} ${week.strength.done}/${week.strength.planned}`, week.running && (week.running.targetMin != null ? `${t.nav.client.running} ${week.running.min}/${week.running.targetMin} min` : `${t.nav.client.running} ${formatNumber(week.running.km, 1)}${week.running.target ? `/${formatNumber(week.running.target, 0)}` : ""} km`)].filter(Boolean).join(" · ") || t.profile.overview.noPrograms} action={<WeekLegend />} />
+        <CardBody className="pt-4">
+          {week.strength || week.running ? <WeekStrip week={week} hrefFor={(it) => (it.kind === "strength" ? `/trener/trening/${it.programId}` : `/trener/trcanje/${it.programId}`)} /> : <p className="text-sm text-muted">{t.profile.overview.noPrograms}</p>}
+        </CardBody>
+      </Card>
+
+      <Card className="lg:col-span-3">
+        <CardHeader title={t.profile.overview.compliance} description={t.profile.overview.complianceDesc} />
+        <CardBody className="pt-3"><ComplianceTable rows={week.history} /></CardBody>
+      </Card>
 
       <Card className="lg:col-span-2">
         <CardHeader title={t.progress.weight} action={<Link href={`?tab=measurements`} className="text-sm font-semibold text-accent">{t.common.view}</Link>} />

@@ -17,8 +17,9 @@ import { NumCell } from "@/components/strength/num-cell";
 import { ScaleField } from "@/components/questionnaire/fields";
 import { TimeCell } from "./time-cell";
 
-export function ActivityForm({ activity, workouts, onDone, clientId, allowImport = true }: {
+export function ActivityForm({ activity, workouts, onDone, clientId, allowImport = true, preset }: {
   activity?: Activity; workouts: { id: string; label: string }[]; onDone: () => void; clientId?: string; allowImport?: boolean;
+  preset?: { workout_id: string; title: string; km: number | null; duration_s: number | null };
 }) {
   const router = useRouter();
   const { toast } = useToast();
@@ -28,10 +29,10 @@ export function ActivityForm({ activity, workouts, onDone, clientId, allowImport
   const [pending, start] = useTransition();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [f, setF] = useState({
-    performed_on: activity?.performed_on ?? todayISO(), started_at: activity?.started_at ?? null, title: activity?.title ?? "",
-    km: activity ? activity.distance_m / 1000 : null as number | null, duration_s: activity?.duration_s ?? null as number | null,
+    performed_on: activity?.performed_on ?? todayISO(), started_at: activity?.started_at ?? null, title: activity?.title ?? preset?.title ?? "",
+    km: activity ? activity.distance_m / 1000 : preset?.km ?? null as number | null, duration_s: activity?.duration_s ?? preset?.duration_s ?? null as number | null,
     avg_hr: activity?.avg_hr ?? null, max_hr: activity?.max_hr ?? null, avg_power: activity?.avg_power ?? null, elevation_gain_m: activity?.elevation_gain_m ?? null,
-    rpe: activity?.rpe ?? null as number | null, notes: activity?.notes ?? "", workout_id: activity?.workout_id ?? "", source: activity?.source ?? "manual" as Activity["source"],
+    rpe: activity?.rpe ?? null as number | null, notes: activity?.notes ?? "", workout_id: activity?.workout_id ?? preset?.workout_id ?? "", source: activity?.source ?? "manual" as Activity["source"],
   });
 
   async function importFile(fl: File | null) {

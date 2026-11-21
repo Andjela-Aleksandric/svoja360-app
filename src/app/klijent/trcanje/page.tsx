@@ -8,7 +8,7 @@ import { RunningView } from "@/components/running/running-view";
 
 export const metadata = { title: t.nav.client.running };
 
-export default async function ClientRunningPage() {
+export default async function ClientRunningPage({ searchParams }: { searchParams: Promise<{ upis?: string }> }) {
   const viewer = await requireClient();
   const id = await getActiveRunningProgramId(viewer.client.id);
   const [tree, activities] = await Promise.all([id ? getRunningTree(id) : null, listActivities(viewer.client.id)]);
@@ -16,7 +16,7 @@ export default async function ClientRunningPage() {
   return (
     <>
       <PageHeader title={t.nav.client.running} description={tree ? tree.name : t.running.noProgram} />
-      <RunningView tree={tree} currentWeek={week} activities={activities} />
+      <RunningView tree={tree} currentWeek={week} activities={activities} openFor={(await searchParams).upis} />
     </>
   );
 }

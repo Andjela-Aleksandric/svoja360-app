@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Footprints, Pencil, Plus, Trash2 } from "lucide-react";
 import type { Activity, RunningTree, RWorkout } from "@/lib/running/types";
@@ -19,7 +19,7 @@ import { TrendChart } from "@/components/charts/trend-chart";
 import { deleteActivityAction } from "@/app/actions/running";
 import { ActivityForm } from "./activity-form";
 
-export function WorkoutCard({ w, done }: { w: RWorkout; done: boolean }) {
+export function WorkoutCard({ w, done, onLog }: { w: RWorkout; done: boolean; onLog?: () => void }) {
   const dist = estimateWorkoutDistanceM(w.segments), dur = estimateWorkoutDurationS(w.segments);
   return (
     <div className={cn("lift rounded-[18px] border p-4", done ? "border-success/30 bg-success-soft/40" : "border-line bg-surface")}>
@@ -46,14 +46,20 @@ export function WorkoutCard({ w, done }: { w: RWorkout; done: boolean }) {
         ))}
       </ol>
       {w.notes && <p className="mt-2 rounded-[10px] bg-subtle px-3 py-2 text-[13px]">{w.notes}</p>}
+      {onLog && !done && <Button size="sm" variant="primary" className="mt-3 w-full sm:w-auto" onClick={onLog}><Plus className="size-4" />{t.running.logThis}</Button>}
     </div>
   );
 }
 
-export function RunningView({ tree, currentWeek, activities, clientId, canDelete = true }: { tree: RunningTree | null; currentWeek: number; activities: Activity[]; clientId?: string; canDelete?: boolean }) {
+export function RunningView({ tree, currentWeek, activities, clientId, canDelete = true, openFor }: { tree: RunningTree | null; currentWeek: number; activities: Activity[]; clientId?: string; canDelete?: boolean; openFor?: string }) {
   const router = useRouter();
   const { toast } = useToast();
   const [adding, setAdding] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const allWorkouts = (tree?.weeks ?? []).flatMap((w) => w.workouts);
+  const presetFor = (w: RWorkout | undefined) => w ? { workout_id: w.id, title: w.title, km: estimateWorkoutDistanceM(w.segments) ? Math.round(estimateWorkoutDistanceM(w.segments) / 100) / 10 : null, duration_s: estimateWorkoutDurationS(w.segments) || null } : undefined;
+  const [preset, setPreset] = useState(() => (openFor && !activities.some((a) => a.workout_id === openFor) ? presetFor(allWorkouts.find((w) => w.id === openFor)) : undefined));
+  useEffect(() => { if (preset) setAdding(true); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [editing, setEditing] = useState<Activity | null>(null);
   const [deleting, setDeleting] = useState<Activity | null>(null);
   const [pending, start] = useTransition();
@@ -81,7 +87,7 @@ export function RunningView({ tree, currentWeek, activities, clientId, canDelete
       {week && week.workouts.length > 0 && (
         <Card>
           <CardHeader title={`${t.running.schedule} · ${t.strength.week(currentWeek)}`} description={tree!.name} />
-          <CardBody className="grid gap-3 md:grid-cols-2">{week.workouts.map((w) => <WorkoutCard key={w.id} w={w} done={doneIds.has(w.id)} />)}</CardBody>
+          <CardBody className="grid gap-3 md:grid-cols-2">{week.workouts.map((w) => <WorkoutCard key={w.id} w={w} done={doneIds.has(w.id)} onLog={() => { setPreset(presetFor(w)); setAdding(true); }} />)}</CardBody>
         </Card>
       )}
 
@@ -93,11 +99,11 @@ export function RunningView({ tree, currentWeek, activities, clientId, canDelete
       </div>
 
       <Card>
-        <CardHeader title={t.running.activities} action={<Button size="sm" onClick={() => setAdding(true)}><Plus className="size-4" />{t.running.addActivity}</Button>} />
+        <CardHeader title={t.running.activities} action={<Button size="sm" onClick={() => { setPreset(undefined); setAdding(true); }}><Plus className="size-4" />{t.running.addActivity}</Button>} />
         <CardBody>
           {activities.length === 0 ? <EmptyState icon={<Footprints />} title={t.running.noActivities} className="border-0 py-6" /> : (
             <ul className="-mx-2 grid">
-              {activities.slice(0, 30).map((x) => (
+              {activities.slice(0, showAll ? 60 : 8).map((x) => (
                 <li key={x.id} className="flex items-center gap-3 rounded-[12px] px-2 py-2.5 hover:bg-hover">
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-semibold">{x.title || t.nav.client.running}</div>
@@ -111,12 +117,13 @@ export function RunningView({ tree, currentWeek, activities, clientId, canDelete
                   {canDelete && <Button variant="ghost" size="icon-sm" aria-label={t.common.delete} onClick={() => setDeleting(x)}><Trash2 /></Button>}
                 </li>
               ))}
+              {activities.length > 8 && <li className="pt-2 text-center"><Button size="sm" variant="secondary" onClick={() => setShowAll(!showAll)}>{showAll ? t.common.showLess : t.common.showAll}</Button></li>}
             </ul>
           )}
         </CardBody>
       </Card>
 
-      <Modal open={adding} onOpenChange={setAdding} title={t.running.addActivity} size="lg"><ActivityForm workouts={workoutOptions} onDone={() => setAdding(false)} clientId={clientId} allowImport={!clientId} /></Modal>
+      <Modal open={adding} onOpenChange={(o) => { setAdding(o); if (!o) setPreset(undefined); }} title={preset ? preset.title : t.running.addActivity} size="lg"><ActivityForm key={preset?.workout_id ?? "new"} preset={preset} workouts={workoutOptions} onDone={() => { setAdding(false); setPreset(undefined); }} clientId={clientId} allowImport={!clientId} /></Modal>
       <Modal open={!!editing} onOpenChange={(o) => !o && setEditing(null)} title={t.common.edit} size="lg">{editing && <ActivityForm activity={editing} workouts={workoutOptions} onDone={() => setEditing(null)} clientId={clientId} />}</Modal>
       <ConfirmDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)} title={t.common.delete} description={t.running.deleteConfirm} confirmLabel={t.common.delete} loading={pending}
         onConfirm={() => deleting && start(async () => { const r = await deleteActivityAction(deleting.id); if (r.ok) { toast(t.running.deleted); setDeleting(null); router.refresh(); } else toast(r.error, "error"); })} />
