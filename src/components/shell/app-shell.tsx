@@ -35,8 +35,11 @@ export function AppShell({ role, userName, badges, children }: { role: "coach" |
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[248px_1fr]">
       {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-dvh flex-col border-r border-line bg-surface/70 px-3 py-5 backdrop-blur md:flex">
-        <Link href={role === "coach" ? "/trener" : "/klijent"} className="mb-7 px-3 [&_svg]:transition-transform [&_svg]:duration-700 hover:[&_svg]:rotate-[360deg]"><Logo size={26} /></Link>
+      <aside className="band sticky top-0 hidden h-dvh flex-col overflow-hidden bg-band px-3 py-6 text-band-fg md:flex">
+        <span aria-hidden className="pointer-events-none absolute -right-24 -top-24 size-56 rounded-full bg-accent/25 blur-3xl" />
+        <span aria-hidden className="pointer-events-none absolute -bottom-28 -left-20 size-56 rounded-full bg-mint/15 blur-3xl" />
+        <Link href={role === "coach" ? "/trener" : "/klijent"} className="relative mb-2 px-3"><Logo size={26} inverted /></Link>
+        <div className="eyebrow relative mb-6 px-3 text-[10px] text-band-muted">{role === "coach" ? t.roles.coach : t.roles.client} · {t.nav.menu}</div>
         <nav className="grid gap-0.5" aria-label={t.nav.menu}>
           {nav.map((item) => {
             const Icon = icons[item.icon];
@@ -44,23 +47,23 @@ export function AppShell({ role, userName, badges, children }: { role: "coach" |
             const count = badges?.[item.href];
             return (
               <Link key={item.href} href={item.href} aria-current={on ? "page" : undefined}
-                className={cn("group relative flex h-10 items-center gap-3 rounded-[12px] px-3 text-sm font-semibold transition-colors", on ? "text-ink" : "text-muted hover:bg-hover hover:text-ink")}>
-                {on && <motion.span layoutId="sidebar-active" className="absolute inset-0 rounded-[12px] bg-subtle" transition={{ type: "spring", stiffness: 500, damping: 40 }} />}
-                <Icon className="relative size-[18px] transition-transform duration-200 group-hover:scale-110" />
-                <span className="relative flex-1">{item.label}</span>
+                className={cn("group relative flex h-11 items-center gap-3 rounded-[14px] px-3 text-sm font-semibold transition-colors", on ? "text-band" : "text-band-muted hover:bg-band-2 hover:text-band-fg")}>
+                {on && <motion.span layoutId="sidebar-active" className="absolute inset-0 rounded-[14px] bg-mint shadow-[0_10px_30px_-12px_rgba(142,214,184,0.7)]" transition={{ type: "spring", stiffness: 500, damping: 40 }} />}
+                <Icon className="relative size-[18px] transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-6" />
+                <span className="relative flex-1 transition-transform duration-200 group-hover:translate-x-0.5">{item.label}</span>
                 {count ? <span className="relative grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1.5 text-[11px] font-bold text-white tabular">{count}</span> : null}
               </Link>
             );
           })}
         </nav>
-        <div className="mt-auto flex items-center gap-3 rounded-[14px] border border-line bg-surface p-2.5">
+        <div className="relative mt-auto flex items-center gap-3 rounded-[16px] border border-band-line bg-band-2 p-2.5">
           <Avatar name={userName} size={34} />
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-semibold">{userName ?? ""}</div>
-            <div className="text-xs text-muted">{role === "coach" ? t.roles.coach : t.roles.client}</div>
+            <div className="text-xs text-band-muted">{role === "coach" ? t.roles.coach : t.roles.client}</div>
           </div>
           <form action="/auth/odjava" method="post" onSubmit={clearUserCache}>
-            <button type="submit" aria-label={t.common.signOut} title={t.common.signOut} className="grid size-8 place-items-center rounded-full text-muted hover:bg-hover hover:text-ink">
+            <button type="submit" aria-label={t.common.signOut} title={t.common.signOut} className="grid size-8 place-items-center rounded-full text-band-muted transition-colors hover:bg-accent hover:text-white">
               <LogOut className="size-4" />
             </button>
           </form>

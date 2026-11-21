@@ -1,12 +1,29 @@
+"use client";
 import * as React from "react";
 import { cn } from "@/lib/utils/cn";
+import { Select } from "./select";
+import { DateInput, TimeInput } from "./date-input";
 
 const fieldBase =
-  "w-full rounded-[12px] border border-line bg-surface px-3.5 text-ink placeholder:text-faint transition-[border-color,box-shadow] duration-150 hover:border-line-strong focus:border-ink focus:outline-none focus:ring-4 focus:ring-ink/5 disabled:bg-subtle disabled:text-muted aria-[invalid=true]:border-danger aria-[invalid=true]:focus:ring-danger/10";
+  "w-full rounded-[14px] border-[1.5px] border-line bg-surface px-4 text-ink placeholder:text-faint transition-[border-color,box-shadow] duration-200 hover:border-line-strong focus:border-ink focus:outline-none focus:ring-4 focus:ring-accent-soft disabled:bg-subtle disabled:text-muted aria-[invalid=true]:border-danger aria-[invalid=true]:focus:ring-danger/10";
 
-export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(({ className, ...props }, ref) => (
-  <input ref={ref} className={cn(fieldBase, "h-11", className)} {...props} />
-));
+type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
+export const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, ...props }, ref) => {
+  if (props.type === "date" || props.type === "time") {
+    const p = {
+      id: props.id, name: props.name, disabled: props.disabled, required: props.required, className,
+      value: props.value as string | undefined, defaultValue: props.defaultValue as string | undefined,
+      placeholder: props.placeholder, "aria-label": props["aria-label"],
+      "aria-invalid": props["aria-invalid"] === true || props["aria-invalid"] === "true" || undefined,
+      onChange: props.onChange as unknown as (e: { target: { value: string; name?: string } }) => void,
+      onBlur: props.onBlur ? () => (props.onBlur as unknown as () => void)() : undefined,
+    };
+    return props.type === "date"
+      ? <DateInput {...p} min={props.min as string | undefined} max={props.max as string | undefined} />
+      : <TimeInput {...p} />;
+  }
+  return <input ref={ref} className={cn(fieldBase, "h-12", className)} {...props} />;
+});
 Input.displayName = "Input";
 
 export const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(({ className, ...props }, ref) => (
@@ -14,17 +31,8 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTML
 ));
 Textarea.displayName = "Textarea";
 
-export const NativeSelect = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement>>(({ className, children, ...props }, ref) => (
-  <div className="relative">
-    <select ref={ref} className={cn(fieldBase, "h-11 appearance-none pr-10", className)} {...props}>
-      {children}
-    </select>
-    <svg aria-hidden className="pointer-events-none absolute right-3.5 top-1/2 size-4 -translate-y-1/2 text-muted" viewBox="0 0 16 16" fill="none">
-      <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  </div>
-));
-NativeSelect.displayName = "NativeSelect";
+/** Styled dropdown with the same API as a native <select> + <option> children. */
+export const NativeSelect = Select;
 
 export function InputWithUnit({ unit, className, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { unit: string }) {
   return (

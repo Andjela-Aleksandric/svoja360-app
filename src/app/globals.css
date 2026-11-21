@@ -5,21 +5,31 @@
   Success / warning / danger only where state needs it.
 */
 @theme {
-  --color-bg: #f6f5f2;
+  /* Same palette as the SVOJA 360 website: warm paper, near-black ink,
+     raspberry for action, mint for progress, black "bands" for focus areas. */
+  --color-bg: #f3f2f0;
   --color-surface: #ffffff;
-  --color-subtle: #efede9;
-  --color-hover: #f3f1ee;
-  --color-ink: #141215;
-  --color-ink-2: #3b373d;
-  --color-muted: #6f6973;
-  --color-faint: #a29ca5;
-  --color-line: #e6e3df;
-  --color-line-strong: #d6d2cd;
+  --color-subtle: #eceaec;
+  --color-hover: #efedef;
+  --color-ink: #0e0c10;
+  --color-ink-2: #2b2630;
+  --color-muted: #5c5660;
+  --color-faint: #9a939e;
+  --color-line: #dedbdf;
+  --color-line-strong: #c9c4ca;
   --color-accent: #c2255c;
   --color-accent-hover: #a81f4f;
-  --color-accent-soft: #fbe8ef;
-  --color-success: #1d7a52;
-  --color-success-soft: #e4f3ec;
+  --color-accent-soft: #fbe2eb;
+  --color-mint: #8ed6b8;
+  --color-mint-ink: #1d6b50;
+  --color-mint-soft: #ddf3ea;
+  --color-band: #0e0c10;
+  --color-band-2: #1c181e;
+  --color-band-fg: #f6f3f5;
+  --color-band-muted: #a9a1ad;
+  --color-band-line: #2f2932;
+  --color-success: #1d6b50;
+  --color-success-soft: #ddf3ea;
   --color-warning: #9a5b00;
   --color-warning-soft: #fcf0dc;
   --color-danger: #b42318;
@@ -28,14 +38,17 @@
   --color-info-soft: #e7eefa;
 
   --font-sans: "Manrope Variable", "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
 
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
-  --radius-xl: 20px;
+  --radius-xl: 24px;
 
-  --shadow-card: 0 1px 2px rgba(20, 18, 21, 0.04);
-  --shadow-pop: 0 12px 32px -12px rgba(20, 18, 21, 0.25);
+  --shadow-card: 0 1px 2px rgba(14, 12, 16, 0.04);
+  --shadow-pop: 0 24px 50px -24px rgba(14, 12, 16, 0.45);
+  --shadow-glow: 0 14px 30px -14px #c2255c;
 
   --ease-out-soft: cubic-bezier(0.2, 0.7, 0.2, 1);
 }
@@ -55,7 +68,7 @@
     overscroll-behavior-y: none;
   }
   ::selection {
-    background: var(--color-accent-soft);
+    background: var(--color-mint-soft);
     color: var(--color-ink);
   }
   :focus-visible {
@@ -234,3 +247,128 @@
     transform: translate(2px, -2px);
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Website look: serif display headings, mono labels, raspberry/mint details.
+   --------------------------------------------------------------------------- */
+@utility font-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+@utility eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* Headline words rise one by one; hovering a word lifts it in raspberry. */
+@keyframes word {
+  from { opacity: 0; transform: translateY(0.4em) rotate(2deg); }
+  to { opacity: 1; transform: none; }
+}
+.words .w {
+  display: inline-block;
+  animation: word 0.8s var(--ease-out-soft) both;
+  animation-delay: calc(var(--w) * 60ms + 60ms);
+  transition: transform 0.3s var(--ease-out-soft), color 0.3s;
+}
+@media (hover: hover) {
+  .words .w:hover { transform: translateY(-4px); color: var(--color-accent); }
+  .band .words .w:hover { color: var(--color-mint); }
+}
+
+/* Eyebrow with a line that draws in and grows on hover. */
+.eyebrow-line { display: inline-flex; align-items: center; gap: 10px; }
+.eyebrow-line::before {
+  content: "";
+  height: 2px;
+  width: 30px;
+  border-radius: 2px;
+  background: var(--color-accent);
+  animation: line-in 0.9s var(--ease-out-soft) 0.15s both;
+  transition: width 0.5s var(--ease-out-soft);
+}
+.band .eyebrow-line::before { background: var(--color-mint); }
+header:hover .eyebrow-line::before, .group:hover > .eyebrow-line::before { width: 54px; }
+@keyframes line-in { from { width: 0; } }
+
+/* Corner blob that grows on hover (like the website's offer cards). */
+@utility blob {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  &::before {
+    content: "";
+    position: absolute;
+    right: -48px;
+    bottom: -48px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: var(--blob, var(--color-accent-soft));
+    transform: scale(0.3);
+    opacity: 0;
+    transition: transform 0.7s var(--ease-out-soft), opacity 0.4s;
+    z-index: -1;
+    pointer-events: none;
+  }
+  &:hover::before { transform: scale(1.2); opacity: 1; }
+}
+.blob-mint { --blob: var(--color-mint-soft); }
+
+/* Dark focus panels. */
+.band { background: var(--color-band); color: var(--color-band-fg); }
+
+/* Click ripple (added by RippleLayer to .ripple-host elements). */
+.ripple-host { position: relative; overflow: hidden; }
+.ripple-dot {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  background: currentColor;
+  opacity: 0.25;
+  transform: scale(0);
+  animation: ripple 0.7s ease-out forwards;
+}
+@keyframes ripple { to { transform: scale(1); opacity: 0; } }
+
+/* Thin reading-progress bar at the very top. */
+.scroll-progress {
+  position: fixed;
+  top: env(safe-area-inset-top, 0px);
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 70;
+  transform-origin: left;
+  background: linear-gradient(90deg, var(--color-accent), var(--color-mint));
+  pointer-events: none;
+}
+
+/* Live dot (website "tap" marker). */
+@keyframes blink { 50% { opacity: 0.25; } }
+.live-dot::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: middle;
+  animation: blink 1.8s ease-in-out infinite;
+}
+
+@keyframes meter { from { transform: scaleX(0); } }
+
+/* Table rows that slide a raspberry bar in on hover. */
+.row-hover { position: relative; transition: background-color .2s; }
+.row-hover::before {
+  content: ""; position: absolute; left: 0; top: 18%; bottom: 18%; width: 3px; border-radius: 3px;
+  background: var(--color-accent); transform: scaleY(0); transition: transform .3s var(--ease-out-soft);
+}
+.row-hover:hover { background: var(--color-hover); }
+.row-hover:hover::before { transform: scaleY(1); }

@@ -2,7 +2,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils/cn";
 
 export function Label({ className, ...props }: React.LabelHTMLAttributes<HTMLLabelElement>) {
-  return <label className={cn("text-[13px] font-semibold text-ink", className)} {...props} />;
+  return <label className={cn("text-[13px] font-bold text-ink", className)} {...props} />;
 }
 
 interface FieldProps {

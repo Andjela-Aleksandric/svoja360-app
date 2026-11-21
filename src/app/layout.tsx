@@ -1,8 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import "@fontsource-variable/manrope";
+import "@fontsource/instrument-serif/400.css";
+import "@fontsource/instrument-serif/400-italic.css";
+import "@fontsource/ibm-plex-mono/400.css";
+import "@fontsource/ibm-plex-mono/500.css";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
 import { ServiceWorkerRegistrar } from "@/components/pwa/sw-registrar";
+import { RippleLayer, ScrollProgress } from "@/components/ui/effects";
 import { t } from "@/lib/i18n/sr";
 
 export const metadata: Metadata = {
@@ -19,7 +24,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f6f5f2",
+  themeColor: "#f3f2f0",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -34,6 +39,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
         <ToastProvider>{children}</ToastProvider>
         <ServiceWorkerRegistrar />
+        <RippleLayer />
+        <ScrollProgress />
       </body>
     </html>
   );

@@ -5,8 +5,8 @@ export function Card({ className, interactive, ...props }: React.HTMLAttributes<
   return (
     <div
       className={cn(
-        "animate-rise rounded-[20px] border border-line bg-surface shadow-[var(--shadow-card)] transition-[border-color,box-shadow] duration-200 hover:border-line-strong",
-        interactive && "lift",
+        "animate-rise rounded-[24px] border border-line bg-surface shadow-[var(--shadow-card)] transition-[border-color,box-shadow] duration-300 hover:border-line-strong",
+        interactive && "lift blob hover:border-ink",
         className,
       )}
       {...props}
@@ -18,7 +18,7 @@ export function CardHeader({ className, title, description, action }: { classNam
   return (
     <div className={cn("flex items-start justify-between gap-4 px-5 pt-5 sm:px-6 sm:pt-6", className)}>
       <div className="min-w-0">
-        <h2 className="text-[15px] font-bold tracking-tight text-ink">{title}</h2>
+        <h2 className="font-display text-[23px] leading-tight text-ink">{title}</h2>
         {description && <p className="mt-0.5 text-[13px] text-muted">{description}</p>}
       </div>
       {action && <div className="shrink-0">{action}</div>}

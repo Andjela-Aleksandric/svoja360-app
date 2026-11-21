@@ -3,7 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { listClientsWithSummary, type ClientListItem } from "./clients";
 import { getCheckinDeadline } from "./settings";
 import { isPastDeadline, previousWeek, weekStart } from "@/lib/utils/periods";
-import { todayISO } from "@/lib/utils/format";
+import { addDays, todayISO } from "@/lib/utils/format";
+import { currentWeekNumber } from "@/lib/strength/types";
 import { t } from "@/lib/i18n/sr";
 
 export type AttentionReason = keyof typeof t.dashboard.reasons;
@@ -24,6 +25,17 @@ export interface ActivityItem {
   href: string;
 }
 
+export interface WeekRow {
+  client: Pick<ClientListItem, "id" | "full_name" | "phone_e164">;
+  strength: { done: number; planned: number } | null;
+  running: { km: number; target: number | null; runs: number } | null;
+  lastCheckin: string | null;
+  weight: { now: number; delta: number | null } | null;
+  flagged: boolean;
+}
+
+const numOr = (v: unknown) => (v == null ? null : Number(v));
+
 export async function getCoachDashboard() {
   const supabase = await createClient();
   const today = todayISO();
@@ -37,7 +49,11 @@ export async function getCoachDashboard() {
   const active = clients.filter((c) => c.status === "active");
   const names = new Map(clients.map((c) => [c.id, c.full_name]));
 
-  const [pending, reviewedWeek, lastAnswers, sessions, runs, subs, weights] = await Promise.all([
+  const activeIds = active.map((c) => c.id);
+  const strengthIds = active.map((c) => c.programs.strength?.id).filter(Boolean) as string[];
+  const runningIds = active.map((c) => c.programs.running?.id).filter(Boolean) as string[];
+  const none = ["00000000-0000-0000-0000-000000000000"];
+  const [pending, reviewedWeek, lastAnswers, sessions, runs, subs, weights, weekSessions, weekRuns, tWeeks, tDays, rWeeks, history] = await Promise.all([
     supabase.from("questionnaire_submissions").select("id", { count: "exact", head: true }).eq("kind", "checkin").eq("status", "submitted"),
     supabase.from("questionnaire_submissions").select("id", { count: "exact", head: true }).eq("kind", "checkin").eq("status", "reviewed").gte("reviewed_at", `${thisMonday}T00:00:00`),
     supabase
@@ -51,6 +67,12 @@ export async function getCoachDashboard() {
     supabase.from("running_activities").select("id, client_id, distance_m, created_at").order("created_at", { ascending: false }).limit(10),
     supabase.from("questionnaire_submissions").select("id, client_id, kind, submitted_at").neq("status", "draft").not("submitted_at", "is", null).order("submitted_at", { ascending: false }).limit(10),
     supabase.from("body_measurements").select("id, client_id, weight_kg, created_at").not("weight_kg", "is", null).eq("source", "manual").order("created_at", { ascending: false }).limit(10),
+    supabase.from("workout_sessions").select("client_id, training_day_id").eq("status", "completed").gte("performed_on", thisMonday).in("client_id", activeIds.length ? activeIds : none),
+    supabase.from("running_activities").select("client_id, distance_m").gte("performed_on", thisMonday).in("client_id", activeIds.length ? activeIds : none),
+    supabase.from("training_weeks").select("id, program_id, week_number").in("program_id", strengthIds.length ? strengthIds : none),
+    supabase.from("training_days").select("id, week_id").in("program_id", strengthIds.length ? strengthIds : none),
+    supabase.from("running_weeks").select("program_id, week_number, target_km").in("program_id", runningIds.length ? runningIds : none),
+    supabase.from("body_measurements").select("client_id, measured_on, weight_kg").not("weight_kg", "is", null).gte("measured_on", addDays(today, -42)).in("client_id", activeIds.length ? activeIds : none).order("measured_on"),
   ]);
 
   // Signals from last week's check-ins.
@@ -85,7 +107,42 @@ export async function getCoachDashboard() {
   for (const m of weights.data ?? []) activity.push({ id: `m${m.id}`, kind: "weight", clientId: m.client_id, clientName: names.get(m.client_id) ?? "", at: m.created_at, detail: `${String(m.weight_kg).replace(".", ",")} kg`, href: `/trener/klijenti/${m.client_id}?tab=measurements` });
   activity.sort((a, b) => b.at.localeCompare(a.at));
 
+  // This week, per active client: what was planned vs. done.
+  const weekBoard: WeekRow[] = active.map((c) => {
+    const sp = c.programs.strength;
+    let strength: WeekRow["strength"] = null;
+    if (sp) {
+      const ws = (tWeeks.data ?? []).filter((w) => w.program_id === sp.id);
+      const n = currentWeekNumber(sp.start_date, today, ws.length);
+      const wk = ws.find((w) => w.week_number === n);
+      const planned = wk ? (tDays.data ?? []).filter((d) => d.week_id === wk.id).length : 0;
+      const done = (weekSessions.data ?? []).filter((x) => x.client_id === c.id).length;
+      strength = { done, planned };
+    }
+    const rp = c.programs.running;
+    const myRuns = (weekRuns.data ?? []).filter((x) => x.client_id === c.id);
+    let running: WeekRow["running"] = null;
+    if (rp || myRuns.length) {
+      const ws = rp ? (rWeeks.data ?? []).filter((w) => w.program_id === rp.id) : [];
+      const n = rp ? currentWeekNumber(rp.start_date, today, ws.length) : 0;
+      running = { km: Math.round(myRuns.reduce((a, r) => a + r.distance_m, 0) / 100) / 10, target: numOr(ws.find((w) => w.week_number === n)?.target_km), runs: myRuns.length };
+    }
+    const hist = (history.data ?? []).filter((h) => h.client_id === c.id);
+    const weight = c.latestWeight != null ? { now: c.latestWeight, delta: hist.length > 1 ? Math.round((Number(hist[hist.length - 1].weight_kg) - Number(hist[0].weight_kg)) * 10) / 10 : null } : null;
+    return { client: { id: c.id, full_name: c.full_name, phone_e164: c.phone_e164 }, strength, running, lastCheckin: c.lastCheckin?.submitted_at ?? null, weight, flagged: attention.some((a) => a.client.id === c.id && a.reasons.some((r) => r === "pain" || r === "missingCheckin" || r === "highStress")) };
+  });
+  const plannedTotal = weekBoard.reduce((a, r) => a + (r.strength?.planned ?? 0), 0);
+  const doneTotal = weekBoard.reduce((a, r) => a + Math.min(r.strength?.done ?? 0, r.strength?.planned ?? 0), 0);
+
   return {
+    weekBoard,
+    week: {
+      start: thisMonday,
+      workoutsDone: (weekSessions.data ?? []).length,
+      compliance: plannedTotal ? Math.round((doneTotal / plannedTotal) * 100) : null,
+      km: Math.round((weekRuns.data ?? []).reduce((a, r) => a + r.distance_m, 0) / 100) / 10,
+      runs: (weekRuns.data ?? []).length,
+    },
     stats: {
       active: active.length,
       newThisMonth: clients.filter((c) => c.start_date >= monthStart).length,

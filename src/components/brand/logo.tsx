@@ -1,21 +1,23 @@
 import { cn } from "@/lib/utils/cn";
 
+/** Same mark as the website: a raspberry ring with a mint segment, serif wordmark. */
 export function LogoMark({ size = 28, className }: { size?: number; className?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" className={className} aria-hidden>
-      <circle cx="16" cy="16" r="12.5" fill="none" stroke="var(--color-ink)" strokeWidth="3.5" />
-      <path d="M16 3.5a12.5 12.5 0 0 1 12.5 12.5" fill="none" stroke="var(--color-accent)" strokeWidth="3.5" strokeLinecap="round" />
-    </svg>
+    <span
+      aria-hidden
+      className={cn("logo-ring inline-block shrink-0 rounded-full transition-transform duration-700 ease-[cubic-bezier(.2,.7,.2,1)]", className)}
+      style={{ width: size * 0.78, height: size * 0.78, border: `${Math.max(2, Math.round(size / 11))}px solid var(--color-accent)`, borderRightColor: "var(--color-mint)" }}
+    />
   );
 }
 
-export function Logo({ size = 28, className, withText = true }: { size?: number; className?: string; withText?: boolean }) {
+export function Logo({ size = 28, className, withText = true, inverted }: { size?: number; className?: string; withText?: boolean; inverted?: boolean }) {
   return (
-    <span className={cn("inline-flex items-center gap-2", className)}>
+    <span className={cn("group/logo inline-flex items-center gap-2 [&:hover_.logo-ring]:rotate-[360deg]", className)}>
       <LogoMark size={size} />
       {withText && (
-        <span className="font-extrabold tracking-tight text-ink" style={{ fontSize: Math.round(size * 0.62) }}>
-          SVOJA <span className="text-accent">360</span>
+        <span className={cn("font-display leading-none", inverted ? "text-band-fg" : "text-ink")} style={{ fontSize: Math.round(size * 0.95) }}>
+          SVOJA <span className={cn("italic", inverted ? "text-mint" : "text-accent")}>360</span>
         </span>
       )}
     </span>
