@@ -48,7 +48,7 @@ export function AppShell({ role, userName, badges, collapsed: initialCollapsed =
   const ToggleIcon = collapsed ? PanelLeftOpen : PanelLeftClose;
 
   return (
-    <div className={cn("min-h-dvh md:grid md:transition-[grid-template-columns] md:duration-300 md:ease-[cubic-bezier(.2,.7,.2,1)]", collapsed ? "md:grid-cols-[84px_1fr]" : "md:grid-cols-[256px_1fr]")}>
+    <div style={{ "--sidebar-w": collapsed ? "84px" : "256px" } as React.CSSProperties} className={cn("min-h-dvh md:grid md:transition-[grid-template-columns] md:duration-300 md:ease-[cubic-bezier(.2,.7,.2,1)]", collapsed ? "md:grid-cols-[84px_1fr]" : "md:grid-cols-[256px_1fr]")}>
       {/* Desktop sidebar */}
       <aside className={cn("band sticky top-0 z-30 hidden h-dvh flex-col bg-band py-5 text-band-fg md:flex", collapsed ? "px-3" : "px-3")}>
         <span aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">

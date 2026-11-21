@@ -30,8 +30,9 @@ export function TodayPanel({ week }: { week: ClientWeek }) {
             <span className="grid size-12 shrink-0 place-items-center rounded-full bg-mint-soft text-mint-ink transition-transform duration-300 group-hover:rotate-[-8deg] group-hover:scale-110"><Apple className="size-5" /></span>
             <div className="min-w-0 flex-1">
               <div className="eyebrow text-[10px]">{H.todayNutrition}</div>
-              <div className="mt-0.5 font-bold">{n.kcal ? `${n.kcal} kcal` : n.name}</div>
-              <div className="text-sm text-muted">{[n.protein && `P ${n.protein} g`, n.carbs && `UH ${n.carbs} g`, n.fat && `M ${n.fat} g`].filter(Boolean).join(" · ") || H.openPlan}</div>
+              <div className="mt-0.5 font-bold tabular">{n.eaten != null && n.kcal ? `${n.eaten} / ${n.kcal} kcal` : n.kcal ? `${n.kcal} kcal` : n.name}</div>
+              {n.eaten != null && n.kcal ? <span className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-subtle"><span className="block h-full rounded-full bg-mint-ink" style={{ width: `${Math.min(100, (n.eaten / n.kcal) * 100)}%` }} /></span> : null}
+              <div className="mt-1 text-sm text-muted">{n.eaten != null ? H.logFood : [n.protein && `P ${n.protein} g`, n.carbs && `UH ${n.carbs} g`, n.fat && `M ${n.fat} g`].filter(Boolean).join(" · ") || H.openPlan}</div>
             </div>
             <ArrowRight className="size-4 text-faint transition-transform group-hover:translate-x-1 group-hover:text-ink" />
           </Link>

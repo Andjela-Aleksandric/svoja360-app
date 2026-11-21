@@ -48,7 +48,7 @@ export interface ClientWeek {
   today: WeekItem[];
   strength: { id: string; done: number; planned: number; weekNo: number; weeks: number; name: string } | null;
   running: { id: string | null; km: number; target: number | null; min: number; targetMin: number | null; planned: number; done: number; weekNo: number; weeks: number; name: string } | null;
-  nutrition: { id: string; name: string; kcal: number | null; protein: number | null; carbs: number | null; fat: number | null } | null;
+  nutrition: { id: string; name: string; eaten: number | null; kcal: number | null; protein: number | null; carbs: number | null; fat: number | null } | null;
   prs: { name: string; weight: number | null; reps: number | null; e1rm: number | null }[];
   weeklyKm: { date: string; value: number }[];
   history: WeekHistoryRow[];
@@ -65,13 +65,15 @@ export async function getClientWeek(clientId: string, opts: { snapshot?: boolean
   const histStart = addDays(monday, -7 * Math.max(0, historyWeeks - 1));
   const supabase = await createClient();
   const [pid, rid, nid] = await Promise.all([getActiveProgramId(clientId), getActiveRunningProgramId(clientId), getActivePlanId(clientId)]);
-  const [prog, run, plan, sessions, activities, sa, checkins, weights] = await Promise.all([
+  const [prog, run, plan, sessions, activities, sa, checkins, weights, eatenRows] = await Promise.all([
     pid ? getProgramTree(pid) : null, rid ? getRunningTree(rid) : null, nid ? getNutritionTree(nid) : null,
     listSessions(clientId, { since: historyWeeks ? histStart : monday }), listActivities(clientId, snapshot ? 400 : 120),
     snapshot ? getStrengthAnalytics(clientId, 12) : null,
     historyWeeks ? supabase.from("questionnaire_submissions").select("period_start").eq("client_id", clientId).eq("kind", "checkin").neq("status", "draft").gte("period_start", histStart) : null,
     historyWeeks ? supabase.from("body_measurements").select("measured_on, weight_kg").eq("client_id", clientId).not("weight_kg", "is", null).gte("measured_on", histStart) : null,
+    supabase.from("food_log_entries").select("kcal").eq("client_id", clientId).eq("logged_on", today),
   ]);
+  const eaten = eatenRows.error ? null : Math.round((eatenRows.data ?? []).reduce((a, r) => a + Number(r.kcal), 0));
 
   const done = sessions.filter((s) => s.status === "completed");
   const weekDone = done.filter((s) => s.performed_on >= monday);
@@ -145,7 +147,7 @@ export async function getClientWeek(clientId: string, opts: { snapshot?: boolean
 
   return {
     start: monday, days, flexible, today: todayItems, strength, running,
-    nutrition: plan ? { id: plan.id, name: plan.name, kcal: plan.kcal_target, protein: plan.protein_g, carbs: plan.carbs_g, fat: plan.fat_g } : null,
+    nutrition: plan ? { id: plan.id, name: plan.name, eaten, kcal: plan.kcal_target, protein: plan.protein_g, carbs: plan.carbs_g, fat: plan.fat_g } : null,
     prs, weeklyKm: snapshot ? computeRunningAnalytics(activities, 8, today).weeklyKm : [], history,
   };
 }

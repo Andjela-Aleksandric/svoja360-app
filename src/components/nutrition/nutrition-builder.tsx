@@ -170,7 +170,7 @@ export function NutritionBuilder({ initial, foods, templates, clients, clientNam
 
       <AnimatePresence>
         {dirty && (
-          <motion.div initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 80, opacity: 0 }} className="fixed inset-x-4 bottom-[calc(80px+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-md items-center gap-3 rounded-full bg-ink py-2 pl-5 pr-2 text-white shadow-[var(--shadow-pop)] md:bottom-6 md:left-[calc(248px+1rem)]">
+          <motion.div initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 80, opacity: 0 }} className="fixed inset-x-4 bottom-[calc(80px+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-md items-center gap-3 rounded-full bg-ink py-2 pl-5 pr-2 text-white shadow-[var(--shadow-pop)] md:bottom-6 md:left-[calc(var(--sidebar-w,256px)+1rem)]">
             <span className="flex-1 text-sm font-semibold">{t.strength.unsaved}</span>
             <Button variant="accent" onClick={save} loading={saving}><Save className="size-4" />{t.common.save}</Button>
           </motion.div>

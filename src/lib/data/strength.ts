@@ -115,6 +115,38 @@ export async function getPreviousPerformance(clientId: string, exerciseIds: stri
   return Object.fromEntries(Object.entries(best).map(([k, v]) => [k, { date: v.date, sets: v.sets }]));
 }
 
+export interface ExerciseHistory { sessions: { date: string; sets: { reps: number | null; weight_kg: number | null; set_type: string }[] }[]; bestE1RM: number | null; bestWeight: number | null }
+
+/** Last sessions and all-time bests per exercise (for PR detection and the exercise sheet). */
+export async function getExerciseHistory(clientId: string, exerciseIds: string[], excludeSession?: string): Promise<Record<string, ExerciseHistory>> {
+  if (!exerciseIds.length) return {};
+  const { estimateOneRepMax } = await import("@/lib/utils/training");
+  const supabase = await createClient();
+  const { data } = await supabase.from("workout_sets")
+    .select("exercise_id, position, reps, weight_kg, set_type, session:workout_sessions!inner(id, client_id, performed_on, status)")
+    .eq("session.client_id", clientId).eq("session.status", "completed").eq("is_completed", true)
+    .in("exercise_id", exerciseIds).order("position").limit(4000);
+  type Row = { exercise_id: string; reps: number | null; weight_kg: unknown; set_type: string; session: { id: string; performed_on: string } };
+  const out: Record<string, ExerciseHistory & { bySession: Map<string, { date: string; sets: ExerciseHistory["sessions"][number]["sets"] }> }> = {};
+  for (const r of (data ?? []) as unknown as Row[]) {
+    if (r.session.id === excludeSession) continue;
+    const h = (out[r.exercise_id] ??= { sessions: [], bestE1RM: null, bestWeight: null, bySession: new Map() });
+    const w = num(r.weight_kg);
+    const ses = h.bySession.get(r.session.id) ?? { date: r.session.performed_on, sets: [] };
+    ses.sets.push({ reps: r.reps, weight_kg: w, set_type: r.set_type });
+    h.bySession.set(r.session.id, ses);
+    if (r.set_type !== "warmup") {
+      const e = estimateOneRepMax(w, r.reps);
+      if (e != null && (h.bestE1RM == null || e > h.bestE1RM)) h.bestE1RM = e;
+      if (w != null && w > 0 && (h.bestWeight == null || w > h.bestWeight)) h.bestWeight = w;
+    }
+  }
+  return Object.fromEntries(Object.entries(out).map(([k, v]) => [k, {
+    bestE1RM: v.bestE1RM, bestWeight: v.bestWeight,
+    sessions: [...v.bySession.values()].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8),
+  }]));
+}
+
 export async function getStrengthAnalytics(clientId: string, weeks = 12) {
   const { computeStrengthAnalytics } = await import("@/lib/strength/analytics");
   const sessions = (await listSessions(clientId)).filter((s) => s.status === "completed");

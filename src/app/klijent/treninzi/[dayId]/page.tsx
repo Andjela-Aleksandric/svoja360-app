@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireClient } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { getPreviousPerformance, getProgramTree, getSessionSets, listExercises } from "@/lib/data/strength";
+import { getExerciseHistory, getPreviousPerformance, getProgramTree, getSessionSets, listExercises } from "@/lib/data/strength";
 import { t } from "@/lib/i18n/sr";
 import { WorkoutLogger } from "@/components/strength/workout-logger";
 
@@ -22,8 +22,11 @@ export default async function WorkoutDayPage({ params }: { params: Promise<{ day
   const { data: existing } = await supabase.from("workout_sessions").select("id, started_at, finished_at, status, notes, performed_on").eq("client_id", viewer.client.id).eq("training_day_id", dayId).order("performed_on", { ascending: false }).limit(1).maybeSingle();
   const existingSets = existing ? await getSessionSets([existing.id as string]) : [];
   const exercises = await listExercises(true);
-  const ids = pDay.exercises.map((e) => e.exercise_id);
-  const previous = await getPreviousPerformance(viewer.client.id, ids, existing?.id as string | undefined);
+  const ids = [...new Set([...pDay.exercises.map((e) => e.exercise_id), ...existingSets.map((s) => s.exercise_id)])];
+  const [previous, history] = await Promise.all([
+    getPreviousPerformance(viewer.client.id, ids, existing?.id as string | undefined),
+    getExerciseHistory(viewer.client.id, ids, existing?.id as string | undefined),
+  ]);
   return (
     <WorkoutLogger
       programId={tree.id}
@@ -31,6 +34,8 @@ export default async function WorkoutDayPage({ params }: { params: Promise<{ day
       weekNumber={week.week_number}
       exercises={exercises.filter((e) => ids.includes(e.id)).map((e) => ({ id: e.id, name: e.name, instructions: e.instructions, media_url: e.media_url, equipment: e.equipment }))}
       previous={previous}
+      history={history}
+      library={exercises.filter((e) => !e.is_archived)}
       existing={existing ? { id: existing.id as string, started_at: existing.started_at as string | null, finished_at: existing.finished_at as string | null, status: existing.status as string, notes: existing.notes as string | null, performed_on: existing.performed_on as string, sets: existingSets } : null}
     />
   );
