@@ -40,7 +40,24 @@ export async function getClientTasks(clientId: string, startDate: string): Promi
 }
 
 export interface WeekItem { kind: "strength" | "run"; id: string; programId: string; title: string; sub: string; href: string; done: boolean; dow: number | null; planM?: number; planS?: number; type?: string }
-export interface WeekHistoryRow { start: string; strengthDone: number; strengthPlanned: number; km: number; minutes: number; targetKm: number | null; targetMin: number | null; checkin: "sent" | "missing" | "pending" | "notDue"; weight: number | null }
+export interface WeekHistoryRow {
+  start: string; strengthDone: number; strengthPlanned: number; km: number; minutes: number; targetKm: number | null; targetMin: number | null;
+  checkin: "sent" | "missing" | "pending" | "notDue"; weight: number | null;
+  /** Food diary: days logged and days within ±10% of the kcal target (or simply logged when there is no target). */
+  foodLogged: number; foodOnTarget: number; daysInWeek: number;
+  /** Ring fill 0..1 (null = nothing planned to measure against). */
+  rings: { strength: number | null; cardio: number | null; food: number | null };
+}
+
+/** Ring fill for one week: training done vs planned, running vs weekly target, food days on target out of 7. */
+export function ringsFor(r: Omit<WeekHistoryRow, "rings">, hasFoodPlan: boolean): WeekHistoryRow["rings"] {
+  const cap = (v: number) => Math.max(0, Math.min(1.25, v));
+  return {
+    strength: r.strengthPlanned > 0 ? cap(r.strengthDone / r.strengthPlanned) : null,
+    cardio: r.targetMin ? cap(r.minutes / r.targetMin) : r.targetKm ? cap(r.km / r.targetKm) : null,
+    food: hasFoodPlan || r.foodLogged > 0 ? cap(r.foodOnTarget / 7) : null,
+  };
+}
 export interface ClientWeek {
   start: string;
   days: { date: string; dow: number; items: WeekItem[]; loggedStrength: number; loggedKm: number }[];
@@ -65,14 +82,17 @@ export async function getClientWeek(clientId: string, opts: { snapshot?: boolean
   const histStart = addDays(monday, -7 * Math.max(0, historyWeeks - 1));
   const supabase = await createClient();
   const [pid, rid, nid] = await Promise.all([getActiveProgramId(clientId), getActiveRunningProgramId(clientId), getActivePlanId(clientId)]);
-  const [prog, run, plan, sessions, activities, sa, checkins, weights, eatenRows] = await Promise.all([
+  const [prog, run, plan, sessions, activities, sa, checkins, weights, eatenRows, foodRows] = await Promise.all([
     pid ? getProgramTree(pid) : null, rid ? getRunningTree(rid) : null, nid ? getNutritionTree(nid) : null,
     listSessions(clientId, { since: historyWeeks ? histStart : monday }), listActivities(clientId, snapshot ? 400 : 120),
     snapshot ? getStrengthAnalytics(clientId, 12) : null,
     historyWeeks ? supabase.from("questionnaire_submissions").select("period_start").eq("client_id", clientId).eq("kind", "checkin").neq("status", "draft").gte("period_start", histStart) : null,
     historyWeeks ? supabase.from("body_measurements").select("measured_on, weight_kg").eq("client_id", clientId).not("weight_kg", "is", null).gte("measured_on", histStart) : null,
     supabase.from("food_log_entries").select("kcal").eq("client_id", clientId).eq("logged_on", today),
+    historyWeeks ? supabase.from("food_log_entries").select("logged_on, kcal").eq("client_id", clientId).gte("logged_on", histStart) : null,
   ]);
+  const kcalByDay = new Map<string, number>();
+  for (const r of foodRows?.error ? [] : foodRows?.data ?? []) kcalByDay.set(r.logged_on as string, (kcalByDay.get(r.logged_on as string) ?? 0) + Number(r.kcal));
   const eaten = eatenRows.error ? null : Math.round((eatenRows.data ?? []).reduce((a, r) => a + Number(r.kcal), 0));
 
   const done = sessions.filter((s) => s.status === "completed");
@@ -132,7 +152,14 @@ export async function getClientWeek(clientId: string, opts: { snapshot?: boolean
     const runsW = activities.filter((a) => inWeek(a.performed_on));
     const ws = (weights?.data ?? []).filter((w) => inWeek(w.measured_on as string)).map((w) => Number(w.weight_kg));
     const sentFor = new Set((checkins?.data ?? []).map((c) => c.period_start as string));
-    history.push({
+    let foodLogged = 0, foodOnTarget = 0;
+    for (let d = 0; d < 7; d++) {
+      const k = kcalByDay.get(addDays(start, d));
+      if (!k) continue;
+      foodLogged++;
+      if (!plan?.kcal_target || Math.abs(k / plan.kcal_target - 1) <= 0.1) foodOnTarget++;
+    }
+    const row = {
       start,
       strengthDone: done.filter((x) => inWeek(x.performed_on)).length,
       strengthPlanned: pw && (!prog?.start_date || prog.start_date <= end) ? pw.days.length : 0,
@@ -142,7 +169,9 @@ export async function getClientWeek(clientId: string, opts: { snapshot?: boolean
       targetMin: rw && (!run?.start_date || run.start_date <= end) ? rw.target_minutes : null,
       checkin: i === 0 || (opts.startDate && opts.startDate > end) ? "notDue" : sentFor.has(start) ? "sent" : i === 1 ? "pending" : "missing",
       weight: ws.length ? Math.round((ws.reduce((a, b) => a + b, 0) / ws.length) * 10) / 10 : null,
-    });
+      foodLogged, foodOnTarget, daysInWeek: i === 0 ? isoWeekday(today) : 7,
+    } as const;
+    history.push({ ...row, rings: ringsFor(row, !!plan) });
   }
 
   return {

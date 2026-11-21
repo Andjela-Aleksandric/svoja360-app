@@ -13,6 +13,7 @@ import { CheckinBadge } from "@/components/clients/status";
 import { TrendChart } from "@/components/charts/trend-chart";
 import { WeekLegend, WeekStrip } from "@/components/plan/week-strip";
 import { TodayPanel } from "@/components/plan/today-panel";
+import { WeekRings } from "@/components/plan/week-rings";
 
 export const metadata = { title: t.nav.client.home };
 
@@ -22,7 +23,7 @@ const stepLabel = { initial: H.startInitial, initialContinue: H.continueInitial,
 export default async function ClientHome() {
   const viewer = await requireClient();
   const [{ steps, checkin }, measurements, week] = await Promise.all([
-    getClientTasks(viewer.client.id, viewer.client.start_date), getMeasurements(viewer.client.id), getClientWeek(viewer.client.id),
+    getClientTasks(viewer.client.id, viewer.client.start_date), getMeasurements(viewer.client.id), getClientWeek(viewer.client.id, { historyWeeks: 1 }),
   ]);
   const today = todayISO();
   const weights = [...measurements].reverse().filter((m) => m.weight_kg != null).slice(-12).map((m) => ({ date: m.measured_on, value: m.weight_kg }));
@@ -43,23 +44,11 @@ export default async function ClientHome() {
       >
         {hasPlan && (
           <div className="stagger grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
-            {s && (
-              <div className="group/hs col-span-2 flex items-center gap-4 rounded-[20px] border border-band-line bg-white/[0.03] p-4 transition-all duration-300 hover:-translate-y-1 hover:border-mint/50 sm:p-5 lg:col-span-1">
-                <ProgressRing value={s.done} max={s.planned || 1} size={78} stroke={7} tone="mint" track="var(--color-band-line)">
-                  <span className="font-display text-[26px] leading-none">{s.done}<span className="text-band-muted">/{s.planned}</span></span>
-                </ProgressRing>
-                <div className="min-w-0">
-                  <div className="eyebrow text-[10px] text-band-muted">{H.heroStrength}</div>
-                  <div className="mt-1 truncate text-[15px] font-semibold">{s.name}</div>
-                  <div className="font-mono text-[11px] text-band-muted">{H.weekOf(s.weekNo, s.weeks)}</div>
-                </div>
+            {week.history[0] && (
+              <div className="col-span-2 rounded-[20px] border border-band-line bg-white/[0.03] p-4 transition-colors duration-300 hover:border-mint/40 sm:p-5">
+                <div className="mb-3 flex items-baseline justify-between gap-3"><span className="eyebrow text-[10px] text-band-muted">{t.rings.title}</span>{s && <span className="font-mono text-[10.5px] text-band-muted">{H.weekOf(s.weekNo, s.weeks)}</span>}</div>
+                <WeekRings week={week.history[0]} />
               </div>
-            )}
-            {r && (
-              <HeroStat label={r.targetMin != null ? H.heroRunMin : H.heroRun} value={r.targetMin != null ? r.min : formatNumber(r.km, 1)} accent="mint"
-                hint={r.targetMin != null ? H.heroOf(`${r.targetMin} min`) : r.target ? H.heroOf(`${formatNumber(r.target, 0)} km`) : t.dashboard.heroRuns(r.done)}>
-                {(r.targetMin || r.target) ? <span className="mt-3 block h-1 overflow-hidden rounded-full bg-band-line"><span className="block h-full origin-left animate-[meter_1s_cubic-bezier(.2,.7,.2,1)_both] rounded-full bg-mint" style={{ width: `${Math.min(100, r.targetMin ? (r.min / r.targetMin) * 100 : (r.km / r.target!) * 100)}%` }} /></span> : null}
-              </HeroStat>
             )}
             <HeroStat label={H.checkinStatus} value={checkin.status === "submitted" || checkin.status === "reviewed" ? "✓" : checkin.status === "notDue" ? "–" : "!"} accent={checkin.status === "missing" || checkin.status === "draft" ? "rasp" : "mint"} hint={checkinText} href="/klijent/izvestaji" />
             {week.nutrition && (
